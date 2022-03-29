@@ -1,0 +1,12 @@
+name: 'Derive Docker Name'
+description: 'Get Docker name from GitHub repository name'
+inputs:
+  repo-name:
+    description: 'The name of the repository.'
+    required: true
+outputs:
+  docker-name:
+    description: 'The name of the Docker image.'
+runs:
+  using: 'node16'
+  main: 'index.js'

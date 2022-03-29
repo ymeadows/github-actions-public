@@ -1,0 +1,106 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build And Push Step Service
+
+on:
+  workflow_call:
+    inputs:
+      epoch:
+        required: false
+        default: 1
+        description: 'The major version number of the step-service.'
+        type: number
+    secrets:
+      gcp-credentials:
+        required: true
+        description: 'The path to the GCP credentials file.'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.10
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 app --exclude __pycache__ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 app --exclude __pycache__ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        pytest
+    - name: Authenticate to Google Cloud
+      id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: '${{ secrets.gcp-credentials }}'
+    - name: Setup Google Cloud
+      uses: google-github-actions/setup-gcloud@v0
+      with:
+        project_id: 't0-prod'
+    - name: Setup Docker
+      run: |-
+        gcloud --quiet auth configure-docker
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v1
+    - id: docker-name-step
+      name: 'Derive Docker Name'
+      uses: './.github/actions/derive-docker-name'
+    - name: Build Docker Image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: false
+        load: true
+        tags: gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+    - name: Push Docker Image
+      id: docker-push
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: |
+          gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
+          gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:${{ github.sha }}
+          gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest
+          gcr.io/t0-prod/${{ steps.docker-name-step.docker-name }}:${{ github.sha }}
+          gcr.io/t0-prod/${{ steps.docker-name-step.docker-name }}:latest
+          gcr.io/t0-prod/${{ steps.docker-name-step.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
+          gcr.io/t0-qa-282516/${{ steps.docker-name-step.docker-name }}:${{ github.sha }}
+          gcr.io/t0-qa-282516/${{ steps.docker-name-step.docker-name }}:latest
+          gcr.io/t0-qa-282516/${{ steps.docker-name-step.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Tag Git
+      uses: hole19/git-tag-action@master
+      env:
+        TAG: v${{ inputs.epoch }}.${{ github.run_number }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+          tag_name: v${{ inputs.epoch }}.${{ github.run_number }}
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

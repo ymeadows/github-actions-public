@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Validate PR
+on:
+  workflow_call:
+    secrets:
+      gcp-credentials:
+        required: true
+        description: 'The path to the GCP credentials file.'
+      github-pat-token:
+        required: true
+        description: 'The GitHub Personal Access token.'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Authenticate to Google Cloud
+      id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: '${{ secrets.gcp-credentials }}'
+    - name: Setup Google Cloud
+      uses: google-github-actions/setup-gcloud@v0
+      with:
+        project_id: 't0-saas'
+    - name: Setup Docker
+      run: |-
+        gcloud --quiet auth configure-docker
+    - id: docker-name-step
+      name: 'Derive Docker Name'
+      uses: './.github/actions/derive-docker-name'
+    - name: Pull latest image to scan
+      run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+    - name: Repository Dispatch
+      uses: peter-evans/repository-dispatch@v2
+      if: failure()
+      with:
+        token: ${{ secrets.github-pat-token }}
+        event-type: scan-failure
