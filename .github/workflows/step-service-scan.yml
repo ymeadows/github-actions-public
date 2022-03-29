@@ -31,7 +31,7 @@ jobs:
         gcloud --quiet auth configure-docker
     - id: docker-name-step
       name: 'Derive Docker Name'
-      uses: './.github/actions/derive-docker-name'
+      uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
     - name: Pull latest image to scan
       run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest
     - name: Run Trivy vulnerability scanner

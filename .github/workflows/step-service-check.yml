@@ -72,7 +72,7 @@ jobs:
       if: ${{ github.actor != 'dependabot[bot]' }}
     - id: docker-name-step
       name: 'Derive Docker Name'
-      uses: './.github/actions/derive-docker-name'
+      uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
     - name: Build Docker Image
       uses: docker/build-push-action@v2
       if: ${{ github.actor != 'dependabot[bot]' }}
