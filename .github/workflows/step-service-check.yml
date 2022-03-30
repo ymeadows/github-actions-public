@@ -79,6 +79,7 @@ jobs:
       with:
         context: .
         push: false
+        pull: true
         load: true
         tags: gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
