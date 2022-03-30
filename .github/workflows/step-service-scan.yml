@@ -33,11 +33,11 @@ jobs:
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
     - name: Pull latest image to scan
-      run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest
+      run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.docker-name }}:latest'
+        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
