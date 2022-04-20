@@ -32,6 +32,8 @@ jobs:
     - id: docker-name-step
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
+      with:
+        repo-name: ${{ env.GITHUB_REPOSITORY}}
     - name: Pull latest image to scan
       run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest
     - name: Run Trivy vulnerability scanner
