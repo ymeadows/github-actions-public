@@ -6,6 +6,7 @@ try {
     if(!repoName) {
         repoName = github.context.payload.repository.name;
     }
+    repoName = repoName.split("/")[1];
     const dockerImageName = repoName.replace("step-", "");
     core.info(`Docker Image Name is ${dockerImageName}`);
     core.setOutput("docker-name", dockerImageName);
