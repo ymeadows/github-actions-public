@@ -9,6 +9,10 @@ on:
         default: 1
         description: 'The major version number of the step-service.'
         type: number
+      repo-name:
+        required: false
+        description: 'The name of the repository.'
+        type: string
     secrets:
       gcp-credentials:
         required: true
@@ -58,7 +62,7 @@ jobs:
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
       with:
-        repo-name: ${{ env.GITHUB_REPOSITORY}}
+        repo-name: ${{ inputs.repo-name }}
     - name: Build Docker Image
       uses: docker/build-push-action@v2
       with:
