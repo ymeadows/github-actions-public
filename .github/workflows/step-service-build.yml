@@ -13,6 +13,11 @@ on:
         required: false
         description: 'The name of the repository.'
         type: string
+      python-version:
+        required: false
+        description: 'The version of python used in build.'
+        default: '3.10'
+        type: string
     secrets:
       gcp-credentials:
         required: true
@@ -27,7 +32,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.10'
+        python-version: '${{ input.python-version }}'
         cache: 'pip'
     - name: Install dependencies
       run: |
