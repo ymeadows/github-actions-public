@@ -50,7 +50,7 @@ runs:
       ALL_VERSIONS="${ALL_VERSIONS},latest"
       echo "ALL_VERSIONS=$ALL_VERSIONS" >> $GITHUB_ENV
 
-  - uses: ymeadows/github-actions-public/lib/setup-gcr
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
     with:
       project: ${{ inputs.gcp-project }}
       project_id_number: ${{ inputs.gcp-project-id }}
