@@ -55,7 +55,7 @@ runs:
         operation: increment
         prefix: ${{ inputs.prefix }}
     - id: cut-version
-      uses: ymeadows/github-actions-public/lib/rolling-versions
+      uses: ymeadows/github-actions-public/lib/rolling-versions@fold-in-private-actions
       with:
         version: ${{ steps.inc-tag.outputs.result }}
         prefix: ${{ inputs.prefix }}
