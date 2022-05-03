@@ -1,0 +1,93 @@
+name: "Docker: Build And Push"
+description: Builds and pushes a docker image to our repos, under multiple tags
+inputs:
+  version:
+    description: The version to be built
+    required: true
+  gcp-service-account-key:
+    description: Token to access GCP. Use `secrets.GCP_PROD_SERVICE_ACCOUNT_KEY`
+    required: true
+  gcp-project:
+    description: GCP project to authenticate in.
+    required: false
+    default: t0-prod
+  image-name:
+    description: The base image name to use; defaults to repo name
+    required: false
+  prefix:
+    description: Any prefix of the version (e.g. 'v')
+    required: false
+  suppress-pull:
+    description: >
+      Some processes are incompatible with pulling all images.
+      Rarely, then, we can prevent that happening.
+    required: false
+    default: false
+
+
+runs:
+  using: composite
+
+  steps:
+  - id: rolling-versions
+    uses: ymeadows/github-actions-public/rolling-versions
+    with:
+      version: ${{ inputs.version }}
+      prefix: ${{ inputs.prefix }}
+  - name: Compute Docker Values
+    shell: bash
+    run: |
+      DOCKER_IMAGE_NAME=${{ inputs.image-name }}
+      [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
+      echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+      REV=$(git rev-parse HEAD)
+      echo "REV=$REV" >> $GITHUB_ENV
+      ALL_VERSIONS="${{inputs.version}}"
+      ALL_VERSIONS="${ALL_VERSIONS},${{steps.rolling-versions.outputs.major-minor}}"
+      ALL_VERSIONS="${ALL_VERSIONS},${{steps.rolling-versions.outputs.major}}"
+      ALL_VERSIONS="${ALL_VERSIONS},${{github.sha}}"
+      ALL_VERSIONS="${ALL_VERSIONS},$REV"
+      ALL_VERSIONS="${ALL_VERSIONS},latest"
+      echo "ALL_VERSIONS=$ALL_VERSIONS" >> $GITHUB_ENV
+
+  - uses: ymeadows/github-actions-public/lib/setup-gcr
+    with:
+      service-account-key: ${{ inputs.gcp-service-account-key }}
+      project: ${{ inputs.gcp-project }}
+
+  - name: Build Release Image
+    shell: bash
+    run: > # folded string
+      docker build --tag localbuild ${{ (!inputs.suppress-pull && '--pull') || '' }}
+      --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}"
+      --label "org.opencontainers.image.version=${{ inputs.version }}"
+      --label "org.opencontainers.image.revision=${{ env.REV }}"
+      .
+      | tee BUILDLOG.txt
+
+      docker save localbuild -o scanme.tar # trouble loading local images
+
+  - name: Run Trivy vulnerability scanner
+    uses: aquasecurity/trivy-action@0.0.20
+    with:
+      input: scanme.tar
+      format: 'table'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      severity: 'CRITICAL,HIGH'
+
+  - name: Tag & Push Docker Images
+    shell: bash
+    run: > # folded string
+      for t in gcr.io/{t0-qa-282516,t0-saas,t0-prod}/${{ env.DOCKER_IMAGE_NAME }}:{${{env.ALL_VERSIONS}}}; do
+      echo $t;
+      docker tag localbuild $t;
+      docker push $t;
+      done
+
+  - name: Create Release
+    uses: softprops/action-gh-release@v1
+    with:
+      body_path: BUILDLOG.txt
+      tag_name: ${{ inputs.version }}

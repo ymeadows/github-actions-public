@@ -1,0 +1,28 @@
+name: Setup GCP
+description: Sets up Google Cloud Platform services for later use
+inputs:
+  project:
+    description: The GCP project to target
+    required: false
+    default: t0-prod
+  service-account-key:
+    description: The service account token to use to authenticate.
+    required: true
+runs:
+  using: composite
+  steps:
+  - name: Authenticate with GCP
+    uses: google-github-actions/auth@v0
+    with:
+      workload_identity_provider: "projects/945001042473/locations/global/workloadIdentityPools/github/providers/github-provider"
+      service_account: ""
+
+  - name: Setup Google Cloud
+    uses: google-github-actions/setup-gcloud@v0.2.1
+    with:
+      version: '347.0.0'
+      service_account_key: ${{ inputs.service-account-key }}
+      project_id: ${{ inputs.project }}
+  - name: Setup Docker
+    shell: bash
+    run: gcloud auth configure-docker
