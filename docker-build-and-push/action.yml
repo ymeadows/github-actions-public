@@ -4,9 +4,6 @@ inputs:
   version:
     description: The version to be built
     required: true
-  gcp-service-account-key:
-    description: Token to access GCP. Use `secrets.GCP_PROD_SERVICE_ACCOUNT_KEY`
-    required: true
   gcp-project:
     description: GCP project to authenticate in.
     required: false
@@ -33,7 +30,7 @@ runs:
 
   steps:
   - id: rolling-versions
-    uses: ymeadows/github-actions-public/rolling-versions
+    uses: ymeadows/github-actions-public/lib/rolling-versions
     with:
       version: ${{ inputs.version }}
       prefix: ${{ inputs.prefix }}
