@@ -80,7 +80,7 @@ runs:
   - name: Tag & Push Docker Images
     shell: bash
     run: > # folded string
-      for t in gcr.io/{t0-qa-282516}/${{ env.DOCKER_IMAGE_NAME }}:{${{env.ALL_VERSIONS}}}; do
+      for t in gcr.io/t0-qa-282516/${{ env.DOCKER_IMAGE_NAME }}:{${{env.ALL_VERSIONS}}}; do
       echo $t;
       docker tag localbuild $t;
       docker push $t;
