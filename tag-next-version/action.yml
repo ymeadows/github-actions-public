@@ -1,0 +1,68 @@
+name: Tag Next Version
+description: adds a tag for the next patchlevel version, based on existing tags
+inputs:
+  prefix:
+    description: A prefix (e.g. 'v') to apply to the new tag
+    required: false
+    default: ""
+  path:
+    description: The path to the repo checkout.
+    required: false
+    default: "."
+outputs:
+  new-tag:
+    description: The new full version incremented
+    value: ${{ steps.inc-tag.outputs.result }}
+  new-min:
+    description: The new full version incremented, trimmed to the minor version
+    value: ${{ steps.cut-min.outputs.result }}
+  new-maj:
+    description: The new full version incremented, trimmed to the major version
+    value: ${{ steps.cut-maj.outputs.result }}
+runs:
+  using: composite
+  steps:
+    - id: list-tags
+      shell: bash
+      run: >
+        dir=$(pwd);
+        pushd ${{ inputs.path }};
+        if [ -z $(git ls-remote --tags |
+        tee ./raw-tags.txt) ]; then
+        echo "0.0.0" > ./raw-tags.txt;
+        fi;
+        popd
+    - id: filter-versions
+      shell: bash
+      run: >
+        dir=$(pwd);
+        pushd ${{ inputs.path }};
+        cat ./raw-tags.txt |
+        grep -v '\^{}' |
+        awk '{ print $2 }' |
+        sed 's#^refs/tags/##' |
+        tee $dir/tag-list.txt;
+        popd
+    - id: highest-tag
+      uses: ymeadows/versiontool@v1
+      with:
+        version: ./tag-list.txt
+        operation: highest
+    - id: inc-tag
+      uses: ymeadows/versiontool@v1
+      with:
+        version: ${{ steps.highest-tag.outputs.result }}
+        operation: increment
+        prefix: ${{ inputs.prefix }}
+    - id: cut-version
+      uses: ymeadows/github-actions-public/lib/rolling-versions@v0
+      with:
+        version: ${{ steps.inc-tag.outputs.result }}
+        prefix: ${{ inputs.prefix }}
+    - run: |
+        cd ${{ inputs.path }}
+        git tag ${{ steps.inc-tag.outputs.result }}
+        git tag -f ${{ steps.cut-version.outputs.major-minor }}
+        git tag -f ${{ steps.cut-version.outputs.major }}
+        git push -f --tags
+      shell: bash

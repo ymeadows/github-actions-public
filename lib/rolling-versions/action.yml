@@ -1,0 +1,34 @@
+name: Compute Rolling Versions
+description: To support simple handling of semver, computes e.g. v1 and v1.2 from v1.2.3
+inputs:
+  version:
+    description: The version to process
+    required: true
+  prefix:
+    description: A prefix (e.g. 'v') to apply to the new tag
+    required: false
+    default: ""
+outputs:
+  major-minor:
+    description: The version trimmed to the minor version
+    value: ${{ steps.cut-min.outputs.result }}
+  major:
+    description: The version trimmed to the major version
+    value: ${{ steps.cut-maj.outputs.result }}
+runs:
+  using: composite
+  steps:
+    - id: cut-min
+      uses: ymeadows/versiontool@v1
+      with:
+        version: ${{inputs.version}}
+        operation: cut
+        flags: -m
+        prefix: ${{ inputs.prefix }}
+    - id: cut-maj
+      uses: ymeadows/versiontool@v1
+      with:
+        version: ${{inputs.version}}
+        operation: cut
+        flags: -M
+        prefix: ${{ inputs.prefix }}
