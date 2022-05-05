@@ -52,9 +52,16 @@ runs:
 
   - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
     with:
-      project: ${{ inputs.gcp-project }}
-      project_id_number: ${{ inputs.gcp-project-id }}
-
+      project: t0-qa-282516
+      project_id_number: "945001042473"
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
+    with:
+      project: t0-saas
+      project_id_number: "991545446866"
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
+    with:
+      project: t0-prod
+      project_id_number: "47742085387"
   - name: Build Release Image
     shell: bash
     run: > # folded string
@@ -80,7 +87,7 @@ runs:
   - name: Tag & Push Docker Images
     shell: bash
     run: > # folded string
-      for t in gcr.io/t0-qa-282516/${{ env.DOCKER_IMAGE_NAME }}:{${{env.ALL_VERSIONS}}}; do
+      for t in gcr.io/{t0-qa-282516,t0-saas,t0-prod}/${{ env.DOCKER_IMAGE_NAME }}:{${{env.ALL_VERSIONS}}}; do
       echo $t;
       docker tag localbuild $t;
       docker push $t;
