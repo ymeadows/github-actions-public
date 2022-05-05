@@ -23,7 +23,7 @@ runs:
 
   steps:
   - id: rolling-versions
-    uses: ymeadows/github-actions-public/lib/rolling-versions@fold-in-private-actions
+    uses: ymeadows/github-actions-public/lib/rolling-versions@v0
     with:
       version: ${{ inputs.version }}
       prefix: ${{ inputs.prefix }}
@@ -43,7 +43,7 @@ runs:
       ALL_VERSIONS="${ALL_VERSIONS},latest"
       echo "ALL_VERSIONS=$ALL_VERSIONS" >> $GITHUB_ENV
 
-  - uses: "ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions"
+  - uses: "ymeadows/github-actions-public/lib/setup-gcr@v0"
     with:
       project: t0-qa-282516
       project_id_number: "945001042473"
@@ -78,7 +78,7 @@ runs:
       docker tag localbuild $t;
       docker push $t;
       done
-  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
     with:
       project: t0-saas
       project_id_number: "991545446866"
@@ -90,7 +90,7 @@ runs:
       docker tag localbuild $t;
       docker push $t;
       done
-  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
     with:
       project: t0-prod
       project_id_number: "47742085387"

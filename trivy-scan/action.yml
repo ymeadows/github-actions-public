@@ -23,7 +23,7 @@ runs:
       echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
       echo "DOCKER_FULL_NAME=$DOCKER_FULL_NAME" >> $GITHUB_ENV
 
-  - uses: ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions
+  - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
     with:
       service-account-key: ${{ inputs.gcp-service-account-key }}
       project: ${{ inputs.gcp-project }}

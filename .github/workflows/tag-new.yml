@@ -1,0 +1,16 @@
+name: Tag Versions
+
+on:
+  push:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2-beta # check out your code
+    - uses: ymeadows/github-actions-public/tag-next-version@v0
+      with:
+        prefix: v
