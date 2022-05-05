@@ -4,13 +4,6 @@ inputs:
   version:
     description: The version to be built
     required: true
-  gcp-project:
-    description: GCP project to authenticate in.
-    required: false
-    default: t0-prod
-  gcp-project-id:
-    description: The numeric ID of the GCP project to authenticate in.
-    required: true
   image-name:
     description: The base image name to use; defaults to repo name
     required: false
@@ -37,8 +30,6 @@ runs:
   - name: Compute Docker Values
     shell: bash
     run: |
-      pwd
-      ls -R /home/runner/
       DOCKER_IMAGE_NAME=${{ inputs.image-name }}
       [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
       echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
