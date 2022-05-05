@@ -37,6 +37,8 @@ runs:
   - name: Compute Docker Values
     shell: bash
     run: |
+      pwd
+      ls -R
       DOCKER_IMAGE_NAME=${{ inputs.image-name }}
       [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
       echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
@@ -50,7 +52,7 @@ runs:
       ALL_VERSIONS="${ALL_VERSIONS},latest"
       echo "ALL_VERSIONS=$ALL_VERSIONS" >> $GITHUB_ENV
 
-  - uses: ./lib/setup-gcr
+  - uses: "ymeadows/github-actions-public/lib/setup-gcr@fold-in-private-actions"
     with:
       project: t0-qa-282516
       project_id_number: "945001042473"
