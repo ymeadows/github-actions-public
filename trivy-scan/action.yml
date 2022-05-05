@@ -1,16 +1,17 @@
 name: Scan For Vulnerabilities
 description: Runs Trivy scanner against a built image
 inputs:
-  gcp-service-account-key:
-    description: Token to access GCP. Use `secrets.GCP_PROD_SERVICE_ACCOUNT_KEY`
-    required: true
   image-name:
     description: The base image name to use; defaults to repo name
     required: false
   gcp-project:
     description: The GCP project to target
     required: false
-    default: t0-prod
+    default: t0-qa-282516
+  gcp-project-id:
+    description: The ID number of the GCP project
+    required: false
+    default: "991545446866"
 runs:
   using: composite
   steps:
@@ -25,8 +26,8 @@ runs:
 
   - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
     with:
-      service-account-key: ${{ inputs.gcp-service-account-key }}
       project: ${{ inputs.gcp-project }}
+      project_id_number: ${{ inputs.gcp-project-id }}
 
   - name: Pull latest image to scan
     shell: bash
