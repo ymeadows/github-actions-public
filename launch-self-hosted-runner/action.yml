@@ -84,6 +84,8 @@ runs:
         create_credentials_file: false
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v0
+    - id: test-gcloud
+      run: gcloud compute instances list
     - id: gce-github-runner-script
       env:
         command: ${{ inputs.command }}
