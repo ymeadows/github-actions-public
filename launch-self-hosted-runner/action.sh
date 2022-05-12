@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ACTION_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) >/dev/null 2>&1 && pwd )"
+cat "$BASH_SOURCE[0]"
 
 function usage {
   echo "Usage: ${0} --command=[start|stop] <arguments>"
@@ -116,7 +117,7 @@ function stop_vm {
   echo "gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now + ${shutdown_timeout} seconds
 }
 
-set +x
+set -x
 safety_on
 case "$command" in
   start)
