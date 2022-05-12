@@ -68,6 +68,7 @@ echo \"gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}\"
 EOS
 
   cat $startup_script
+  echo
 
   gcloud compute instances create ${VM_ID} \
     --zone=${machine_zone} \
@@ -120,7 +121,7 @@ function stop_vm {
   NAME=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
   ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
   echo "✅ Self deleting $NAME in $ZONE in ${shutdown_timeout} seconds ..."
-  echo "gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now + ${shutdown_timeout} seconds
+  echo "sleep $shutdown_timeout; gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now
 }
 
 set -x
