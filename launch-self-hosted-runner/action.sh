@@ -21,13 +21,14 @@ function start_vm {
   RUNNER_TOKEN=$(curl -S -s -XPOST \
       -H "authorization: Bearer ${token}" \
       https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
+      tee /dev/stderr |\
       jq -r .token)
   echo "✅ Successfully got the GitHub Runner registration token"
 
   VM_ID="gce-gh-runner-${GITHUB_RUN_ID}-$(od -N4 -vAn -tu4 < /dev/urandom | sed 's/\s*//')"
   labels="${VM_ID}"
   if [ -n $runner_label ]; then
-    labels="${VM_ID},$runner_label"
+    labels="${VM_ID}\\,$runner_label"
   fi
   service_account_flag=$([[ -z "${runner_service_account}" ]] || echo "--service-account=${runner_service_account}")
   image_project_flag=$([[ -z "${image_project}" ]] || echo "--image-project=${image_project}")
