@@ -81,9 +81,8 @@ EOS
     ${image_family_flag} \
     ${preemptible_flag} \
     --labels=gh_ready=0 \
-    --metadata-from-file=startup-script="$startup_script" \
-    && echo "::set-output name=label::${VM_ID}"
-  echo Last result was: $?
+    --metadata-from-file=startup-script="$startup_script"
+  echo "::set-output name=label::${VM_ID}"
 
   safety_off
   while (( i++ < 24 )); do
