@@ -34,6 +34,9 @@ inputs:
     description: GCE machine type; https://cloud.google.com/compute/docs/machine-types
     default: "n1-standard-4"
     required: true
+  subnet:
+    description: GCP subnet to attach the VM to
+    required: true
   disk_size:
     description: VM disk size.
     required: false
@@ -92,6 +95,7 @@ runs:
         runner_label: ${{ inputs.runner_label }}
         machine_zone: ${{ inputs.machine_zone }}
         machine_type: ${{ inputs.machine_type }}
+        subnet: ${{ inputs.subnet }}
         disk_size: ${{ inputs.disk_size }}
         scopes: ${{ inputs.scopes }}
         shutdown_timeout: ${{ inputs.shutdown_timeout }}

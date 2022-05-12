@@ -35,6 +35,7 @@ function start_vm {
   image_flag=$([[ -z "${image}" ]] || echo "--image=${image}")
   image_family_flag=$([[ -z "${image_family}" ]] || echo "--image-family=${image_family}")
   disk_size_flag=$([[ -z "${disk_size}" ]] || echo "--boot-disk-size=${disk_size}")
+  subnet_flag=$([[ -z "${subnet}" ]] || echo "--subnet=${subnet}")
   preemptible_flag=$([[ "${preemptible}" == "true" ]] && echo "--preemptible" || echo "")
 
   echo "The new GCE VM will be ${VM_ID}"
@@ -71,6 +72,7 @@ EOS
   gcloud compute instances create ${VM_ID} \
     --zone=${machine_zone} \
     ${disk_size_flag} \
+    ${subnet_flag} \
     --machine-type=${machine_type} \
     --scopes=${scopes} \
     ${service_account_flag} \
@@ -81,6 +83,7 @@ EOS
     --labels=gh_ready=0 \
     --metadata-from-file=startup-script="$startup_script" \
     && echo "::set-output name=label::${VM_ID}"
+  echo Last result was: $?
 
   safety_off
   while (( i++ < 24 )); do
