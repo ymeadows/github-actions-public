@@ -40,7 +40,7 @@ function start_vm {
   echo "The new GCE VM will be ${VM_ID}"
 
   startup_script=$(mktemp -t startup-script-XXXXXX.sh)
-  echo "#!/bin/bash" > $startup_script
+  echo "#!/bin/bash" >> $startup_script
 
   if $actions_preinstalled ; then
     echo "✅ Startup script won't install GitHub Actions (pre-installed)"
