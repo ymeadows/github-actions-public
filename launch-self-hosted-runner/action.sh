@@ -39,31 +39,34 @@ function start_vm {
 
   echo "The new GCE VM will be ${VM_ID}"
 
-  startup_script="#!/bin/bash"
+  startup_script=$(mktemp -t startup-script-XXXXXX.sh)
+  echo "#!/bin/bash" > $startup_script
 
   if $actions_preinstalled ; then
     echo "✅ Startup script won't install GitHub Actions (pre-installed)"
-    startup_script="$startup_script
-    cd /actions-runner"
+    echo "cd /actions-runner" >> $startup_script
   else
     echo "✅ Startup script will install GitHub Actions"
-    startup_script="$startup_script
-    mkdir /actions-runner
-    cd /actions-runner
-    curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
-    tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
-    ./bin/installdependencies.sh &&"
+    cat <<EOS >>$startup_script
+mkdir /actions-runner
+cd /actions-runner
+curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
+tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
+./bin/installdependencies.sh &&"
+EOS
   fi
 
-  startup_script="$startup_script
-    gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
-    RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral_flag --disableupdate && \\
-    ./svc.sh install && \\
-    ./svc.sh start && \\
-    gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=1
-    # 3 days represents the max workflow runtime. This will shutdown the instance if everything else fails.
-    echo \"gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}\" | at now + 3 days
-    "
+  cat <<EOS >>$startup_script
+gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
+RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral_flag --disableupdate && \\
+./svc.sh install && \\
+./svc.sh start && \\
+gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=1
+# 3 days represents the max workflow runtime. This will shutdown the instance if everything else fails.
+echo \"gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}\" | at now + 3 days
+EOS
+
+  cat $startup_script
 
   gcloud compute instances create ${VM_ID} \
     --zone=${machine_zone} \
@@ -76,7 +79,7 @@ function start_vm {
     ${image_family_flag} \
     ${preemptible_flag} \
     --labels=gh_ready=0 \
-    --metadata=startup-script="$startup_script" \
+    --metadata-from-file=startup-script="$startup_script" \
     && echo "::set-output name=label::${VM_ID}"
 
   safety_off
