@@ -116,6 +116,7 @@ function stop_vm {
   echo "gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now + ${shutdown_timeout} seconds
 }
 
+set +x
 safety_on
 case "$command" in
   start)
