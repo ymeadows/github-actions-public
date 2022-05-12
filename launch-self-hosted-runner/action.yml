@@ -23,6 +23,9 @@ inputs:
     description: Version of the GitHub Runner.
     default: "2.290.1"
     required: true
+  runner_label:
+    description: Extra label to add for the Runner
+    required: false
   machine_zone:
     description: GCE zone
     default: "us-west1-b"
@@ -86,6 +89,7 @@ runs:
         token: ${{ inputs.token }}
         project_id: ${{ inputs.project }}
         runner_ver: ${{ inputs.runner_ver }}
+        runner_label: ${{ inputs.runner_label }}
         machine_zone: ${{ inputs.machine_zone }}
         machine_type: ${{ inputs.machine_type }}
         disk_size: ${{ inputs.disk_size }}
