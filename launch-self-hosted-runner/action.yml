@@ -81,14 +81,8 @@ runs:
       with:
         workload_identity_provider: "projects/${{inputs.project_id_number}}/locations/global/workloadIdentityPools/github/providers/github-provider"
         service_account: "github-actions-runner-starter@${{inputs.project}}.iam.gserviceaccount.com"
-    - name: Debug Creds
-      shell: bash
-      run: cat /home/runner/work/tier0-cluster/tier0-cluster/gha-creds-*.json
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v0
-    - id: test-gcloud
-      shell: bash
-      run: gcloud compute instances list
     - id: gce-github-runner-script
       env:
         command: ${{ inputs.command }}
