@@ -21,9 +21,9 @@ function start_vm {
   RUNNER_TOKEN=$(curl -S -s -XPOST \
       -H "authorization: Bearer ${token}" \
       https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
-      tee /dev/stderr |\
-      jq -r .token)
+      jq --exit-status -r .token)
   echo "✅ Successfully got the GitHub Runner registration token"
+  echo "::add-mask::${token}"
 
   VM_ID="gce-gh-runner-${GITHUB_RUN_ID}-$(od -N4 -vAn -tu4 < /dev/urandom | sed 's/\s*//')"
   labels="${VM_ID}"
