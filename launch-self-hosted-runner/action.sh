@@ -43,6 +43,10 @@ function start_vm {
   startup_script=$(mktemp -t startup-script-XXXXXX.sh)
   echo "#!/bin/bash" >> $startup_script
 
+  if [ -n $startup_prequel ]; then
+    echo $startup_prequel >> $starup_script
+  fi
+
   if $actions_preinstalled ; then
     echo "✅ Startup script won't install GitHub Actions (pre-installed)"
     echo "cd /actions-runner" >> $startup_script

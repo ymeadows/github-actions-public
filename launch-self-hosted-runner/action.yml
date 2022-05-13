@@ -70,6 +70,9 @@ inputs:
     description: "Whether the GitHub actions have already been installed at `/actions-runner`."
     default: false
     required: true
+  startup_prequel:
+    description: "Script to set up runner prior to common configuration"
+    required: false
 outputs:
   label:
     description: >-
@@ -105,6 +108,7 @@ runs:
         image_family: ${{ inputs.image_family }}
         preemptible: ${{ inputs.preemptible }}
         actions_preinstalled: ${{ inputs.actions_preinstalled }}
+        startup_prequel: ${{inputs.startup_prequel}}
       run: >
         ${{ github.action_path }}/action.sh
       shell: bash
