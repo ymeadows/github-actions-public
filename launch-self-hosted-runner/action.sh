@@ -90,7 +90,7 @@ EOS
   echo "::set-output name=label::${VM_ID}"
 
   safety_off
-  while (( i++ < 24 )); do
+  while (( i++ < 120 )); do
     GH_READY=$(gcloud compute instances describe ${VM_ID} --zone=${machine_zone} --format='json(labels)' | jq -r .labels.gh_ready)
     if [[ $GH_READY == 1 ]]; then
       break
