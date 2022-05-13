@@ -21,7 +21,7 @@ inputs:
     required: true
   runner_ver:
     description: Version of the GitHub Runner.
-    default: "2.290.1"
+    default: "2.291.1"
     required: true
   runner_label:
     description: Extra label to add for the Runner
