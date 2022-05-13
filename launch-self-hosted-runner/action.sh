@@ -60,12 +60,12 @@ mkdir /actions-runner
 cd /actions-runner
 curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
 tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
-chown runner -R .
 ./bin/installdependencies.sh
 EOS
   fi
 
   cat <<EOS >>$startup_script
+chown runner -R /actions-runner
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
 RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate && \\
 ls /home
