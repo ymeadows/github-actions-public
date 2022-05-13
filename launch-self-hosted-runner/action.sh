@@ -139,7 +139,7 @@ function stop_vm {
   ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
   echo "✅ Self deleting $NAME in $ZONE in ${shutdown_timeout} seconds ..."
   echo "$(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE" | env at now
-  gcloud --quiet compute instances delete $NAME --zone=$ZONE
+  gcloud --quiet compute instances delete $NAME --zone=$ZONE || true # errors
 }
 
 function boot_logs {
