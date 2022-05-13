@@ -89,7 +89,6 @@ EOS
     --metadata-from-file=startup-script="$startup_script"
   echo "::set-output name=label::${VM_ID}"
 
-  exit 1
   safety_off
   while (( i++ < 24 )); do
     GH_READY=$(gcloud compute instances describe ${VM_ID} --zone=${machine_zone} --format='json(labels)' | jq -r .labels.gh_ready)
