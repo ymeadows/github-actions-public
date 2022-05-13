@@ -93,12 +93,12 @@ runs:
         service_account: "github-actions-runner-starter@${{inputs.project}}.iam.gserviceaccount.com"
     - name: Start GCloud Group
       shell: bash
-      run: echo ::group::GCloud Setup
+      run: "echo ::group::GCloud Setup"
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v0
     - name: End GCloud Group
       shell: bash
-      run: echo ::endgroup::
+      run: "echo ::endgroup::"
     - id: gce-github-runner-script
       env:
         command: ${{ inputs.command }}
