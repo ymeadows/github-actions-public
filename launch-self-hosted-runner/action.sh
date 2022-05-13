@@ -54,10 +54,13 @@ function start_vm {
   else
     echo "✅ Startup script will install GitHub Actions"
     cat <<EOS >>$startup_script
+adduser runner
+echo runner >> /etc/at.allow
 mkdir /actions-runner
 cd /actions-runner
 curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
 tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
+chown runner -R .
 ./bin/installdependencies.sh
 EOS
   fi
@@ -67,8 +70,9 @@ gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_
 RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate && \\
 ls /home
 cat /etc/passwd
-./svc.sh install && \\
+./svc.sh install runner && \\
 ./svc.sh start && \\
+rm -rf _diag _work && \\
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=1
 # 3 days represents the max workflow runtime. This will shutdown the instance if everything else fails.
 echo \"gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}\" | at now + 3 days
