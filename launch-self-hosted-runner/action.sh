@@ -36,6 +36,7 @@ function start_vm {
   image_family_flag=$([[ -z "${image_family}" ]] || echo "--image-family=${image_family}")
   disk_size_flag=$([[ -z "${disk_size}" ]] || echo "--boot-disk-size=${disk_size}")
   subnet_flag=$([[ -z "${subnet}" ]] || echo "--subnet=${subnet}")
+  network_interface_flag=$([[ -z "${network_interface}" ]] || echo "--network-interface=${network_interface}")
   preemptible_flag=$([[ "${preemptible}" == "true" ]] && echo "--preemptible" || echo "")
 
   echo "The new GCE VM will be ${VM_ID}"
@@ -80,6 +81,7 @@ EOS
     --zone=${machine_zone} \
     ${disk_size_flag} \
     ${subnet_flag} \
+    ${network_interface_flag} \
     --machine-type=${machine_type} \
     --scopes=${scopes} \
     ${service_account_flag} \
