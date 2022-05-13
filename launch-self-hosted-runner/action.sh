@@ -130,8 +130,8 @@ function stop_vm {
         https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
         jq -r .token)
     echo "✅ Successfully got the GitHub Runner deregistration token"
-    /actions-runner/svc.sh stop
-    /actions-runner/svc.sh uninstall
+    sudo /actions-runner/svc.sh stop
+    sudo /actions-runner/svc.sh uninstall
     RUNNER_ALLOW_RUNASROOT=1 /actions-runner/config.sh remove --token $DEREG_TOKEN
     safety_on
   fi
