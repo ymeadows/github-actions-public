@@ -64,6 +64,8 @@ EOS
   cat <<EOS >>$startup_script
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
 RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate && \\
+ls /home
+cat /etc/passwd
 ./svc.sh install && \\
 ./svc.sh start && \\
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=1
@@ -128,6 +130,14 @@ function stop_vm {
   echo "sleep $shutdown_timeout; gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now
 }
 
+function boot_logs {
+  # NOTE: this function runs on the GCE VM
+  echo "Capturing boot logs"
+  NAME=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
+  ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
+  gcloud compute instances get-serial-port-output $NAME --zone=$ZONE
+}
+
 set -x
 safety_on
 case "$command" in
@@ -136,6 +146,9 @@ case "$command" in
     ;;
   stop)
     stop_vm
+    ;;
+  boot_logs)
+    boot_logs
     ;;
   *)
     echo "Invalid command: \`${command}\`, valid values: start|stop" >&2
