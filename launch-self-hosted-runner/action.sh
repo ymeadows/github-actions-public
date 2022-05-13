@@ -127,13 +127,16 @@ function stop_vm {
         https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
         jq -r .token)
     echo "✅ Successfully got the GitHub Runner deregistration token"
+    /actions-runner/svc.sh stop
+    /actions-runner/svc.sh uninstall
     RUNNER_ALLOW_RUNASROOT=1 /actions-runner/config.sh remove --token $DEREG_TOKEN
     safety_on
   fi
   NAME=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
   ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
   echo "✅ Self deleting $NAME in $ZONE in ${shutdown_timeout} seconds ..."
-  echo "sleep $shutdown_timeout; gcloud --quiet compute instances delete $NAME --zone=$ZONE" | env at now
+  echo "$(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE" | env at now
+  gcloud --quiet compute instances delete $NAME --zone=$ZONE
 }
 
 function boot_logs {
