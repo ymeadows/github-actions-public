@@ -66,9 +66,10 @@ EOS
 
   cat <<EOS >>$startup_script
 chown runner -RL /actions-runner
+ls -l /
 ls -l /actions-runner
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
-RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate && \\
+su runner -c "./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate" && \\
 ls /home
 cat /etc/passwd
 ./svc.sh install runner && \\
