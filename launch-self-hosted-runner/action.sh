@@ -56,6 +56,7 @@ function start_vm {
     cat <<EOS >>$startup_script
 adduser runner
 echo runner >> /etc/at.allow
+usermod -aG google-sudoers runner
 mkdir /actions-runner
 cd /actions-runner
 curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
