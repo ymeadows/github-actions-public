@@ -65,11 +65,13 @@ tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
 EOS
   fi
 
-  cat <<EOS >>$startup_script
-NAME=\$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
-ZONE=\$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
-echo "sleep 30; \$(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE" >> /shutdown-vm.sh
+  cat <<'EOSD' >>$startup_script
+NAME=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
+ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
+echo "sleep 30; $(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE" >> /shutdown-vm.sh
 echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/shutdown-vm.sh" >> /actions-runner/.env
+EOSD
+  cat <<EOS >>$startup_script
 chown runner -RL /actions-runner
 gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
 su env runner -c "./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${labels} --unattended --ephemeral --disableupdate" && \\
