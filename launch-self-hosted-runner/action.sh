@@ -68,7 +68,8 @@ EOS
   cat <<'EOSD' >>$startup_script
 NAME=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/name -H 'Metadata-Flavor: Google')
 ZONE=$(curl -S -s -X GET http://metadata.google.internal/computeMetadata/v1/instance/zone -H 'Metadata-Flavor: Google')
-echo "RUNNER_TRACKING_ID="" (sleep 180; $(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE) & disown -hr %1" >> /shutdown-vm.sh
+echo "echo $(which gcloud) --quiet compute instances delete $NAME --zone=$ZONE | at now + 2 minutes" >> /shutdown-vm.sh
+echo "atq" >> /shutdown-vm.sh
 echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/shutdown-vm.sh" >> /actions-runner/.env
 EOSD
   cat <<EOS >>$startup_script
