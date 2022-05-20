@@ -41,6 +41,11 @@ jobs:
         repo-name: ${{ inputs.repo-name }}
     - name: Pull latest image to scan
       run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest
+    - name: Load Trivy configuration
+      id: trivy-configuration
+      run: |
+        if [ -f scan-files-to-ignore.txt ]; then echo "::set-output name=files-to-ignore::$(cat scan-files-to-ignore.txt)"; fi
+        if [ -f scan-dirs-to-ignore.txt ]; then echo "::set-output name=dirs-to-ignore::$(cat scan-dirs-to-ignore.txt)"; fi
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -50,6 +55,8 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
+        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Repository Dispatch
       uses: peter-evans/repository-dispatch@v2
       if: failure()
