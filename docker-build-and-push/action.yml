@@ -16,6 +16,13 @@ inputs:
       Rarely, then, we can prevent that happening.
     required: false
     default: false
+  suppress-release:
+    description: >
+      By default, this action cuts a release with the build log.
+      Some consumers may prefer to cut their own releases,
+      it which case, set this to true
+    required: false
+    default: false
 
 
 runs:
@@ -104,6 +111,7 @@ runs:
       done
 
   - name: Create Release
+    if: ${{ !inputs.suppress_release }}
     uses: softprops/action-gh-release@v1
     with:
       body_path: BUILDLOG.txt
