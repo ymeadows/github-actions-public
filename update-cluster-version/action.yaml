@@ -4,7 +4,7 @@ description: >-
 author: JDL
 inputs:
   REPO_DISPATCH_CLUSTER:
-    description: "A PAT to do the repo-dispatch - use ${{secrets.REPO_DISPATCH_CLUSTER}}"
+    description: "A PAT to do the repo-dispatch - use secrets.REPO_DISPATCH_CLUSTER"
     required: true
     type: string
   service:
