@@ -54,6 +54,7 @@ function start_vm {
   else
     echo "✅ Startup script will install GitHub Actions"
     cat <<EOS >>$startup_script
+cat /etc/group
 addgroup google-sudoers
 adduser runner
 echo runner >> /etc/at.allow
