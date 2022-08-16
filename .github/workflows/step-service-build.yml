@@ -69,7 +69,7 @@ jobs:
       with:
         repo-name: ${{ inputs.repo-name }}
     - name: Build Docker Image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: .
         push: false
@@ -96,7 +96,7 @@ jobs:
         skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Push Docker Image
       id: docker-push
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: .
         push: true
