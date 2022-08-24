@@ -39,7 +39,7 @@ runs:
     run: docker pull ${{ env.DOCKER_FULL_NAME }}
 
   - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@v0.7.1
+    uses: aquasecurity/trivy-action@0.7.1
     with:
       image-ref: ${{env.DOCKER_FULL_NAME}}
       format: 'table'
