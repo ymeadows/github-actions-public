@@ -15,10 +15,10 @@ outputs:
     value: ${{ steps.inc-tag.outputs.result }}
   new-min:
     description: The new full version incremented, trimmed to the minor version
-    value: ${{ steps.cut-min.outputs.result }}
+    value: ${{ steps.cut-version.outputs.major-minor }}
   new-maj:
     description: The new full version incremented, trimmed to the major version
-    value: ${{ steps.cut-maj.outputs.result }}
+    value: ${{ steps.cut-version.outputs.major }}
 runs:
   using: composite
   steps:
