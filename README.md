@@ -52,5 +52,4 @@ jobs:
       with:
         prefix: v
         version: ${{ steps.increment-version.outputs.new-tag }}
-        gcp_service_account_key: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
 ```

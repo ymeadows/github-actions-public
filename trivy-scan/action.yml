@@ -11,7 +11,7 @@ inputs:
   gcp-project-id:
     description: The ID number of the GCP project
     required: false
-    default: "991545446866"
+    default: "945001042473"
   trivyignores:
     description: Used to control Trivy scans
     required: false
@@ -39,7 +39,7 @@ runs:
     run: docker pull ${{ env.DOCKER_FULL_NAME }}
 
   - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@0.7.1
+    uses: aquasecurity/trivy-action@master
     with:
       image-ref: ${{env.DOCKER_FULL_NAME}}
       format: 'table'
