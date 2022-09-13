@@ -103,7 +103,7 @@ EOS
     ${image_flag} \
     ${image_family_flag} \
     ${preemptible_flag} \
-    --labels=gh_ready=0 \
+    --labels=gh_ready=0,vanta-description=kubernetes-cluster-node,vanta-owner=judson_dot_lester \
     --metadata-from-file=startup-script="$startup_script"
   echo "::set-output name=label::${VM_ID}"
 
