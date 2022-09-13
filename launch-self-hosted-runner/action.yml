@@ -94,6 +94,7 @@ runs:
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v0
     - id: comppose-version-candidates
+      shell: bash
       run: |
         echo "2.296.1" > candidate-versions
         echo ${{ inputs.runner_ver }} >> candidate-versions
