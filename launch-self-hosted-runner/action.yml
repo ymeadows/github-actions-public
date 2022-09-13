@@ -20,8 +20,8 @@ inputs:
       GitHub auth token, needs `repo`/`public_repo` scope: https://docs.github.com/en/rest/reference/actions#self-hosted-runners.
     required: true
   runner_ver:
-    description: Version of the GitHub Runner.
-    default: "2.294.0"
+    description: Version of the GitHub Runner, modified by step:highest-runner-version
+    default: "2.296.1"
     required: true
   runner_label:
     description: Extra label to add for the Runner
@@ -93,12 +93,21 @@ runs:
         service_account: "github-actions-runner-starter@${{inputs.project}}.iam.gserviceaccount.com"
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v0
+    - id: comppose-version-candidates
+      run: |
+        echo "2.296.1" > candidate-versions
+        echo ${{ inputs.runner_ver }} >> candidate-versions
+    - id: highest-runner-version
+      uses: ymeadows/versiontool@v1
+      with:
+        version: candidate-versions
+        operation: highest
     - id: gce-github-runner-script
       env:
         command: ${{ inputs.command }}
         token: ${{ inputs.token }}
         project_id: ${{ inputs.project }}
-        runner_ver: ${{ inputs.runner_ver }}
+        runner_ver: ${{ steps.highest-runner-version.outputs.result }}
         runner_label: ${{ inputs.runner_label }}
         machine_zone: ${{ inputs.machine_zone }}
         machine_type: ${{ inputs.machine_type }}
