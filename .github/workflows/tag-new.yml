@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2-beta # check out your code
+    - uses: actions/checkout@v3.1.0 # check out your code
     - uses: ymeadows/github-actions-public/tag-next-version@v0
       with:
         prefix: v
