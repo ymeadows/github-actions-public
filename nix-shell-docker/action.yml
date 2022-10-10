@@ -1,10 +1,5 @@
 name: Build Nix-Shell Docker
 
-inputs:
-  image-name:
-    type: string
-    optional: true
-
 runs:
   using: composite
     steps:
@@ -39,50 +34,9 @@ runs:
       shell: bash
       run: nix-shell --run 'env' | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
 
-    - name: Compute Docker Image Name
-      shell: bash
-      run: |
-        [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=${{ inputs.image-name }}
-        [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
-        echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
-
     - name: Build and Scan
       run: |
         set -x
-        nix-build default.nix
+        nix build
         gzip --decompress --stdout $(readlink result) > image.tar
         trivy image --ignore-unfixed --severity CRITICAL,HIGH --input image.tar
-
-    - uses: "ymeadows/github-actions-public/lib/setup-gcr@v0"
-      with:
-        project: t0-qa-282516
-        project_id_number: "945001042473"
-
-    - name: Push to QA
-      run: |
-        skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:latest
-        skopeo --insecure-policy copy docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-min}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-qa-282516/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-maj}}
-
-    - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
-      with:
-        project: t0-saas
-        project_id_number: "991545446866"
-    - name: Push to Demo
-      run: |
-        skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:latest
-        skopeo --insecure-policy copy docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-min}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-saas/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-maj}}
-
-    - uses: ymeadows/github-actions-public/lib/setup-gcr@v0
-      with:
-        project: t0-prod
-        project_id_number: "47742085387"
-    - name: Push to Prod
-      run: |
-        skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:latest
-        skopeo --insecure-policy copy docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-min}}
-        skopeo --insecure-policy copy docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-tag}} docker://gcr.io/t0-prod/DOCKER_IMAGE_NAME:${{steps.increment-version.outputs.new-maj}}
