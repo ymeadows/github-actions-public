@@ -1,5 +1,13 @@
 name: Build Nix-Shell Docker
 
+inputs:
+  tag-prefix:
+    default: v
+
+outputs:
+  new-tag:
+    value: ${{steps.increment-version.outputs.new-tag}}
+
 runs:
   using: composite
     steps:
