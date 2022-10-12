@@ -43,6 +43,7 @@ runs:
     run: nix-shell --run 'env' | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
 
   - name: Build and Scan
+    shell: bash
     run: |
       set -x
       nix build
