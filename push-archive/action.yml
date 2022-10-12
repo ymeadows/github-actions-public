@@ -32,6 +32,7 @@ runs:
       project_id_number: "945001042473"
 
   - name: Push to QA
+    shell: bash
     run: |
       skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-qa-282516/$DOCKER_IMAGE_NAME:${{inputs.version-tag}}
       skopeo --insecure-policy copy docker://gcr.io/t0-qa-282516/$DOCKER_IMAGE_NAME:${{inputs.version-tag}} docker://gcr.io/t0-qa-282516/$DOCKER_IMAGE_NAME:latest
@@ -43,6 +44,7 @@ runs:
       project: t0-saas
       project_id_number: "991545446866"
   - name: Push to Demo
+    shell: bash
     run: |
       skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-saas/$DOCKER_IMAGE_NAME:${{inputs.version-tag}}
       skopeo --insecure-policy copy docker://gcr.io/t0-saas/$DOCKER_IMAGE_NAME:${{inputs.version-tag}} docker://gcr.io/t0-saas/$DOCKER_IMAGE_NAME:latest
@@ -54,6 +56,7 @@ runs:
       project: t0-prod
       project_id_number: "47742085387"
   - name: Push to Prod
+    shell: bash
     run: |
       skopeo --insecure-policy copy docker-archive:./result docker://gcr.io/t0-prod/$DOCKER_IMAGE_NAME:${{inputs.version-tag}}
       skopeo --insecure-policy copy docker://gcr.io/t0-prod/$DOCKER_IMAGE_NAME:${{inputs.version-tag}} docker://gcr.io/t0-prod/$DOCKER_IMAGE_NAME:latest
