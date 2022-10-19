@@ -2,10 +2,13 @@ name: Push Docker Archive
 
 inputs:
   image-name:
+    description: The base image name to push to
     required: false
   version-tag:
+    description: The version to push
     required: true
   prefix:
+    description: Any prefix on the version
     default: v
 
 runs:

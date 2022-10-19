@@ -3,9 +3,11 @@ name: Build Nix-Shell Docker
 inputs:
   tag-prefix:
     default: v
+    description: Prefix used for the version
 
 outputs:
   new-tag:
+    description: The new tag generated for the push
     value: ${{steps.increment-version.outputs.new-tag}}
 
 runs:
@@ -14,7 +16,7 @@ runs:
   - id: increment-version
     uses: ymeadows/github-actions-public/tag-next-version@v0
     with:
-      prefix: v
+      prefix: ${{ inputs.tag-prefix }}
 
   - name: Prepare Nix
     env:
