@@ -23,7 +23,7 @@ runs:
   - name: Compute Docker Image Name
     shell: bash
     run: |
-      [ -z "$DOCKER_IMAGE_NAME" ] && $DOCKER_IMAGE_NAME=${{ inputs.image-name }}
+      [ -z "$DOCKER_IMAGE_NAME" ] && $DOCKER_IMAGE_NAME="${{ inputs.image-name }}"
       [ -z "$DOCKER_IMAGE_NAME" ] && $DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
       echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
       echo "MAJ=${{steps.cut-version.outputs.major}}" >> $GITHUB_ENV
