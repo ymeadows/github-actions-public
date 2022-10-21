@@ -13,7 +13,8 @@ outputs:
 runs:
   using: composite
   steps:
-  - id: increment-version
+  - name: Increment Version
+    id: increment-version
     uses: ymeadows/github-actions-public/tag-next-version@v0
     with:
       prefix: ${{ inputs.tag-prefix }}
@@ -42,7 +43,7 @@ runs:
 
   - name: Export nix-shell
     shell: bash
-    run: nix-shell --run 'env' | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
+    run: nix develop -c env | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
 
   - name: Build and Scan
     shell: bash

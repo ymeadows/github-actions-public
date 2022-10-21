@@ -1,0 +1,34 @@
+name: Update flake.lock
+
+runs:
+  using: composite
+  steps:
+  - name: Install Nix
+    uses: cachix/install-nix-action@v17
+    with:
+      extra_nix_config: |
+        access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+  - name: Update flake.lock
+    uses: nyarly/update-flake-lock@main # Open PR against upstream
+    with:
+      commit-with-token: true
+      pr-title: "Update flake.lock" # Title of PR to be created
+      pr-labels: |                  # Labels to be set on the PR
+        dependencies
+        automated
+      pr-body: |
+        Automated changes by the [update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock) GitHub Action.
+        ```
+        {{ env.GIT_COMMIT_MESSAGE }}
+        ```
+
+  - name: Export nix-shell
+    shell: bash
+    run: nix develop -c env | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
+
+  - name: Trial Build and Scan
+    shell: bash
+    run: |
+      nix build
+      gzip --decompress --stdout $(readlink result) > image.tar
+      trivy image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH --input image.tar
