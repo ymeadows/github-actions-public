@@ -1,5 +1,13 @@
 name: Update flake.lock
 
+inputs:
+  update_app_id:
+    description: Key for the update app; try secrets.DEP_UPDATE_ID
+    required: true
+  update_app_key:
+    description: Key for the update app; try secrets.DEP_UPDATE_KEY
+    required: true
+
 runs:
   using: composite
   steps:
@@ -7,10 +15,17 @@ runs:
     uses: cachix/install-nix-action@v17
     with:
       extra_nix_config: |
-        access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        access-tokens = github.com=${{ github.token }}
+  - name: Get Updater Token
+    uses: tibdex/github-app-token@v1
+    id: generate-token
+    with:
+      app_id: ${{ inputs.update_app_id}}
+      private_key: ${{inputs.update_app_key}}
   - name: Update flake.lock
     uses: nyarly/update-flake-lock@main # Open PR against upstream
     with:
+      token: ${{ steps.generate-token.outputs.token }}
       commit-with-token: true
       pr-title: "Update flake.lock" # Title of PR to be created
       pr-labels: |                  # Labels to be set on the PR
@@ -21,14 +36,3 @@ runs:
         ```
         {{ env.GIT_COMMIT_MESSAGE }}
         ```
-
-  - name: Export nix-shell
-    shell: bash
-    run: nix develop -c env | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
-
-  - name: Trial Build and Scan
-    shell: bash
-    run: |
-      nix build
-      gzip --decompress --stdout $(readlink result) > image.tar
-      trivy image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH --input image.tar
