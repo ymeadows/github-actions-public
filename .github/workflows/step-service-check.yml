@@ -69,7 +69,7 @@ jobs:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
       if: ${{ github.actor != 'dependabot[bot]' }}
-      uses: google-github-actions/setup-gcloud@v0
+      uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: 't0-prod'
     - name: Setup Docker
