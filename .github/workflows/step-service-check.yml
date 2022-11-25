@@ -95,11 +95,15 @@ jobs:
         tags: gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+    - name: Default Trivy configuration
+      id: trivy-default-configuration
+      run: |
+        echo "dirs-to-ignore=/opt/bitnami/python/lib/python${{ inputs.python-version }}/site-packages" >> $GITHUB_OUTPUT
     - name: Load Trivy configuration
       id: trivy-configuration
       run: |
-        if [ -f scan-files-to-ignore.txt ]; then echo "::set-output name=files-to-ignore::$(cat scan-files-to-ignore.txt)"; fi
-        if [ -f scan-dirs-to-ignore.txt ]; then echo "::set-output name=dirs-to-ignore::$(cat scan-dirs-to-ignore.txt)"; fi
+        if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+        if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
@@ -111,4 +115,4 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
-        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
