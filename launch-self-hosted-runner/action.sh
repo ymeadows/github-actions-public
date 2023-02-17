@@ -108,7 +108,7 @@ EOS
   echo "::set-output name=label::${VM_ID}"
 
   safety_off
-  while (( i++ < 120 )); do
+  while (( i++ < 600 )); do
     GH_READY=$(gcloud compute instances describe ${VM_ID} --zone=${machine_zone} --format='json(labels)' | jq -r .labels.gh_ready)
     if [[ $GH_READY == 1 ]]; then
       break
@@ -119,7 +119,7 @@ EOS
   if [[ $GH_READY == 1 ]]; then
     echo "✅ ${VM_ID} ready ..."
   else
-    echo "Waited 2 minutes for ${VM_ID}, without luck, deleting ${VM_ID} ..."
+    echo "Waited 10 minutes for ${VM_ID}, without luck, deleting ${VM_ID} ..."
     gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}
     exit 1
   fi
