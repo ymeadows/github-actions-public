@@ -79,7 +79,7 @@ inputs:
     required: false
   use_ssd:
     description: "Enable high-performance local SSD"
-    default: false
+    default: "false"
     required: false
 outputs:
   label:
