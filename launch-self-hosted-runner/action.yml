@@ -99,7 +99,7 @@ runs:
     - id: compose-version-candidates
       shell: bash
       run: |
-        echo "2.299.1" > candidate-versions
+        echo "2.302.1" > candidate-versions
         echo ${{ inputs.runner_ver }} >> candidate-versions
     - id: highest-runner-version
       uses: ymeadows/versiontool@v1
