@@ -38,7 +38,7 @@ function start_vm {
   subnet_flag=$([[ -z "${subnet}" ]] || echo "--subnet=${subnet}")
   address_flag=$([[ "${external_network}" == "false" ]] && echo "--no-address" || echo "")
   preemptible_flag=$([[ "${preemptible}" == "true" ]] && echo "--preemptible" || echo "")
-  local_ssd_flag=$([[ "${use_ssd}" == "true" ]] && echo "--local-ssd=interface=NVME")
+  local_ssd_flag=$([[ "${use_ssd}" == "true" ]] && echo "--local-ssd=interface=NVME" || echo "")
 
   echo "The new GCE VM will be ${VM_ID}"
 
