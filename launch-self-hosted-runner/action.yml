@@ -21,7 +21,7 @@ inputs:
     required: true
   runner_ver:
     description: Version of the GitHub Runner, modified by step:highest-runner-version
-    default: "2.299.1"
+    default: "2.302.1"
     required: true
   runner_label:
     description: Extra label to add for the Runner
@@ -77,6 +77,9 @@ inputs:
   startup_prequel:
     description: "Script to set up runner prior to common configuration"
     required: false
+  use_ssd:
+    description: "Enable high-performance local SSD"
+    required: false
 outputs:
   label:
     description: >-
@@ -96,7 +99,7 @@ runs:
     - id: compose-version-candidates
       shell: bash
       run: |
-        echo "2.299.1" > candidate-versions
+        echo "2.302.1" > candidate-versions
         echo ${{ inputs.runner_ver }} >> candidate-versions
     - id: highest-runner-version
       uses: ymeadows/versiontool@v1
@@ -124,6 +127,7 @@ runs:
         preemptible: ${{ inputs.preemptible }}
         actions_preinstalled: ${{ inputs.actions_preinstalled }}
         startup_prequel: ${{inputs.startup_prequel}}
+        use_ssd: ${{inputs.use_ssd}}
       run: >
         ${{ github.action_path }}/action.sh
       shell: bash

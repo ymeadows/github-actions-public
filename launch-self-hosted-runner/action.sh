@@ -38,6 +38,7 @@ function start_vm {
   subnet_flag=$([[ -z "${subnet}" ]] || echo "--subnet=${subnet}")
   address_flag=$([[ "${external_network}" == "false" ]] && echo "--no-address" || echo "")
   preemptible_flag=$([[ "${preemptible}" == "true" ]] && echo "--preemptible" || echo "")
+  local_ssd_flag=$([[ "${use_ssd}" == "true" ]] && echo "--local-ssd=interface=NVME" || echo "")
 
   echo "The new GCE VM will be ${VM_ID}"
 
@@ -46,6 +47,17 @@ function start_vm {
 
   if [ -n "$startup_prequel" ]; then
     echo "$startup_prequel" >> $startup_script
+  fi
+
+  if [ -n "$local_ssd_flag" ]; then
+    cat <<'EOS' >>$startup_script
+ssd_dev=$(lsblk | grep nvme | cut -d ' ' -f 1)
+mkfs.ext4 -F "/dev/$ssd_dev"
+ssd_mountpoint=/home/runner
+mkdir -p "$ssh_mountpoint"
+mount "/dev/$ssd_dev" "$ssd_mountpoint"
+chmod a+rw "$ssd_mountpoint"
+EOS
   fi
 
   if $actions_preinstalled ; then
@@ -103,6 +115,7 @@ EOS
     ${image_flag} \
     ${image_family_flag} \
     ${preemptible_flag} \
+    ${local_ssd_flag} \
     --labels=gh_ready=0,vanta-description=kubernetes-cluster-node,vanta-owner=judson_dot_lester \
     --metadata-from-file=startup-script="$startup_script"
   echo "::set-output name=label::${VM_ID}"
