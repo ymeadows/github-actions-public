@@ -1,17 +1,19 @@
 {
   "name": "derive-docker-name",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Derive the docker image name from the repo name.",
   "main": "index.js",
   "dependencies": {
-    "@actions/core": "^1.6.0",
-    "@actions/github": "^5.0.0"
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jest": "^29.5.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
-  "author": "",
+  "author": "Y Meadows",
   "license": "ISC"
 }
