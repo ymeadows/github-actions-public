@@ -67,7 +67,7 @@ jobs:
     - name: Authenticate to Google Cloud
       id: 'auth'
       if: ${{ github.actor != 'dependabot[bot]' }}
-      uses: 'google-github-actions/auth@v0'
+      uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
