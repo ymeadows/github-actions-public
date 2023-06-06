@@ -12,7 +12,7 @@ runs:
   using: composite
   steps:
   - name: Install Nix
-    uses: cachix/install-nix-action@v17
+    uses: cachix/install-nix-action@v21
     with:
       extra_nix_config: |
         access-tokens = github.com=${{ github.token }}

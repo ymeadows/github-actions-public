@@ -68,7 +68,7 @@ runs:
       docker save localbuild -o scanme.tar # trouble loading local images
 
   - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@0.0.20
+    uses: aquasecurity/trivy-action@0.11.0
     with:
       input: scanme.tar
       format: 'table'
