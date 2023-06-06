@@ -21,7 +21,8 @@ inputs:
     required: true
   runner_ver:
     description: Version of the GitHub Runner, modified by step:highest-runner-version
-    default: "2.302.1"
+    # c.f. https://github.com/actions/runner/releases
+    default: "2.304.0"
     required: true
   runner_label:
     description: Extra label to add for the Runner
