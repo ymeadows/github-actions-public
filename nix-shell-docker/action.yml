@@ -45,6 +45,7 @@ runs:
     shell: bash
     run: |
       set -x
+      if type ymBuild; then ymBuild; exit 0; fi
       nix build
       gzip --decompress --stdout $(readlink result) > image.tar
       trivy image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH --input image.tar --security-checks vuln
