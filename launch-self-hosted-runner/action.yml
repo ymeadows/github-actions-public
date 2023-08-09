@@ -23,7 +23,7 @@ inputs:
     # compose-version-candidates HAS to be updated; this input can be
     description: Version of the GitHub Runner, modified by step:highest-runner-version
     # c.f. https://github.com/actions/runner/releases
-    default: "2.304.0"
+    default: "2.307.1"
     required: true
   runner_label:
     description: Extra label to add for the Runner
@@ -101,7 +101,7 @@ runs:
     - id: compose-version-candidates
       shell: bash
       run: |
-        echo "2.304.0" > candidate-versions
+        echo "2.307.1" > candidate-versions
         echo ${{ inputs.runner_ver }} >> candidate-versions
     - id: highest-runner-version
       uses: ymeadows/versiontool@v1
