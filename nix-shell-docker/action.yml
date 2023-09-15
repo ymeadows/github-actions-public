@@ -45,6 +45,7 @@ runs:
     shell: bash
     run: |
       set -x
+      source <(echo "$shellHook")
       if type ymBuild; then ymBuild; exit 0; fi
       nix build
       gzip --decompress --stdout $(readlink result) > image.tar
