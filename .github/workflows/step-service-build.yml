@@ -67,8 +67,6 @@ jobs:
     - name: Set up Docker Buildx
       id: buildx
       uses: docker/setup-buildx-action@v2
-      with:
-        version: "v0.9.1"
     - id: docker-name-step
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
@@ -81,7 +79,7 @@ jobs:
         push: false
         pull: true
         load: true
-        tags: gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
+        tags: gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: Default Trivy configuration
@@ -96,7 +94,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}'
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
@@ -111,9 +109,6 @@ jobs:
         context: .
         push: true
         tags: |
-          gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
-          gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:${{ github.sha }}
-          gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest
           gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ github.sha }}
           gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest
           gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}

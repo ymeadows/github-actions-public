@@ -30,7 +30,7 @@ jobs:
     - name: Setup Google Cloud
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: 't0-saas'
+        project_id: 't0-prod'
     - name: Setup Docker
       run: |-
         gcloud --quiet auth configure-docker
@@ -40,7 +40,7 @@ jobs:
       with:
         repo-name: ${{ inputs.repo-name }}
     - name: Pull latest image to scan
-      run: docker pull gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest
+      run: docker pull gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest
     - name: Default Trivy configuration
       id: trivy-default-configuration
       run: |
@@ -53,7 +53,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:latest'
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
