@@ -106,7 +106,7 @@ jobs:
         push: false
         pull: true
         load: true
-        tags: gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
+        tags: gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: Default Trivy configuration
@@ -122,7 +122,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
       with:
-        image-ref: 'gcr.io/t0-saas/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
