@@ -58,12 +58,23 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - id: setup-sonarcloud
+      name: 'Setup SonarCloud Project'
+      uses: 'ymeadows/github-actions-public/.github/actions/setup-sonarcloud@main'
+      with:
+        repo-name: ${{ inputs.repo-name }}
+        organization: 'ymeadows'
+        sonar-token: ${{ secrets.sonar-token }}
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
       env:
         GITHUB_TOKEN: ${{ secrets.github-token }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.sonar-token }}
+        args: >
+         -Dsonar.organization=ymeadows
+         -Dsonar.projectKey=${{ steps.setup-sonarcloud.outputs.key }}
+         -Dsonar.python.version=${{ inputs.python-version }}
     - name: Authenticate to Google Cloud
       id: 'auth'
       if: ${{ github.actor != 'dependabot[bot]' }}
@@ -82,8 +93,6 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       if: ${{ github.actor != 'dependabot[bot]' }}
-      with:
-        version: "v0.9.1"
     - id: docker-name-step
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
