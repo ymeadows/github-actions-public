@@ -8,5 +8,5 @@ outputs:
   docker-name:
     description: 'The name of the Docker image.'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'index.js'

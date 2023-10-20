@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         lfs: true
     - name: LFS Checkout
@@ -66,14 +66,14 @@ jobs:
         gcloud --quiet auth configure-docker
     - name: Set up Docker Buildx
       id: buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
     - id: docker-name-step
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
       with:
         repo-name: ${{ inputs.repo-name }}
     - name: Build Docker Image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: .
         push: false
@@ -104,7 +104,7 @@ jobs:
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Push Docker Image
       id: docker-push
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: .
         push: true
