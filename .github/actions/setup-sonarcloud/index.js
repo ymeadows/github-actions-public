@@ -37,16 +37,18 @@ async function run() {
         }
         const response = await fetch('https://sonarcloud.io/api/projects/create', {
             method: 'POST',
-            body: JSON.stringify({name: repoName, project: `${organization}_${repoName}`, organization: organization}),
+            body: new URLSearchParams({name: repoName, project: `${organization}_${repoName}`, organization: organization}),
             headers: {
-                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'Authorization': `Bearer ${sonarToken}`
             }
         });
         if (response.status / 100 !== 2) {
             const responseBodyText = await response.text();
             const responseHeaders = response.headers;
-            const logMessage = `Failed to create SonarCloud project ${repoName} in ${organization}: ${response.status} ${responseBodyText} ${responseHeaders}`;
+            const responseHeadersString = JSON.stringify(Object.fromEntries(responseHeaders));
+            const logMessage = `Failed to create SonarCloud project ${repoName} in ${organization}: ${response.status} ${responseBodyText} ${responseHeadersString}`;
             core.error(logMessage);
             core.setFailed(logMessage);
             return;
