@@ -66,6 +66,16 @@ jobs:
         repo-name: ${{ inputs.repo-name }}
         organization: 'ymeadows'
         sonar-token: ${{ secrets.sonar-token }}
+    - id: write-sonar-properties
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: sonar-project.properties
+        contents: |
+          sonar.projectKey=${{ steps.setup-sonarcloud.outputs.key }}
+          sonar.organization=ymeadows
+          sonar.sourceEncoding=UTF-8
+          sonar.python.version=${{ inputs.python-version }}
+        write-mode: preserve
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
