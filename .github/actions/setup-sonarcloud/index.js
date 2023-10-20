@@ -33,6 +33,7 @@ async function run() {
         const searchResponseJson = await searchResponse.json();
         if(searchResponseJson.paging.total > 0) {
             core.debug(`SonarCloud project ${repoName} already exists in ${organization}`);
+            core.setOutput("key", searchResponseJson.components[0].key);
             return;
         }
         const response = await fetch('https://sonarcloud.io/api/projects/create', {
