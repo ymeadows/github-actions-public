@@ -136,6 +136,11 @@ jobs:
           gcr.io/t0-qa-282516/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        labels: |
+          com.ymeadows.openapi=${{ steps.openapi.outputs.json }}
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.authors=${{ steps.get-author.outputs.author }}
     - name: Tag Git
       uses: hole19/git-tag-action@master
       env:
