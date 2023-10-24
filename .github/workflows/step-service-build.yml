@@ -72,6 +72,20 @@ jobs:
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
       with:
         repo-name: ${{ inputs.repo-name }}
+    - name: Generate OpenAPI file
+      uses: column-st/fastapi-openapi-specs-action@v1.0.2
+      with:
+        moduleDir: app
+        outputExtension: json
+    - name: Get openapi.json
+      id: openapi
+      run: echo "json=$(cat openapi.json)" >> $GITHUB_OUTPUT
+    - name: Get first commit committer email
+      id: get-author
+      run: |
+        FULL_EMAIL=$(git log --format='%ae' $(git rev-list --max-parents=0 HEAD))
+        USERNAME=$(echo $FULL_EMAIL | cut -d'@' -f1)
+        echo "author=$USERNAME" >> $GITHUB_OUTPUT
     - name: Build Docker Image
       uses: docker/build-push-action@v5
       with:
@@ -82,6 +96,11 @@ jobs:
         tags: gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        labels: |
+          com.ymeadows.openapi=${{ steps.openapi.outputs.json }}
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.authors=${{ steps.get-author.outputs.author }}
     - name: Default Trivy configuration
       id: trivy-default-configuration
       run: |
