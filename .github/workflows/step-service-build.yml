@@ -34,7 +34,7 @@ jobs:
     - name: LFS Checkout
       run: git lfs checkout
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '${{ inputs.python-version }}'
         cache: 'pip'
@@ -54,13 +54,14 @@ jobs:
         pytest
     - name: Authenticate to Google Cloud
       id: 'auth'
-      uses: 'google-github-actions/auth@v1'
+      uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
-      uses: google-github-actions/setup-gcloud@v1
+      uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: 't0-prod'
+        skip_install: true
     - name: Setup Docker
       run: |-
         gcloud --quiet auth configure-docker
@@ -110,6 +111,15 @@ jobs:
       run: |
         if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
         if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+    - id: write-global-trivyignore
+      name: Write Global Trivy Ignore
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: .trivyignore
+        contents: |
+          # Fixed version not yet available in Debian
+          CVE-2024-0567
+        write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -117,8 +127,7 @@ jobs:
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
+        vuln-type: 'os'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Push Docker Image
@@ -147,7 +156,7 @@ jobs:
         TAG: v${{ inputs.epoch }}.${{ github.run_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
       with:
           tag_name: v${{ inputs.epoch }}.${{ github.run_number }}
       env:

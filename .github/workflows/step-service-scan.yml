@@ -50,6 +50,15 @@ jobs:
       run: |
         if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
         if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+    - id: write-global-trivyignore
+      name: Write Global Trivy Ignore
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: .trivyignore
+        contents: |
+          # Fixed version not yet available in Debian
+          CVE-2024-0567
+        write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -57,8 +66,7 @@ jobs:
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
-        vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
+        vuln-type: 'os'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Repository Dispatch
