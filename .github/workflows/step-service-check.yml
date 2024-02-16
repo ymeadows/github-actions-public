@@ -137,7 +137,7 @@ jobs:
         path: .trivyignore
         contents: |
           # Fixed version not yet available in Debian
-          CVE-2024-0567
+          CVE-2023-5981
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
