@@ -40,7 +40,7 @@ jobs:
     - name: LFS Checkout
       run: git lfs checkout
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '${{ inputs.python-version }}'
         cache: 'pip'
@@ -89,13 +89,14 @@ jobs:
     - name: Authenticate to Google Cloud
       id: 'auth'
       if: ${{ github.actor != 'dependabot[bot]' }}
-      uses: 'google-github-actions/auth@v1'
+      uses: 'google-github-actions/auth@v2'
       with:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
       if: ${{ github.actor != 'dependabot[bot]' }}
-      uses: google-github-actions/setup-gcloud@v1
+      uses: google-github-actions/setup-gcloud@v2
       with:
+        skip_install: true # May need to remove this line if gcloud is not included in GH runners in the future
         project_id: 't0-prod'
     - name: Setup Docker
       if: ${{ github.actor != 'dependabot[bot]' }}
@@ -129,6 +130,15 @@ jobs:
       run: |
         if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
         if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+    - id: write-global-trivyignore
+      name: Write Global Trivy Ignore
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: .trivyignore
+        contents: |
+          # Fixed version not yet available in Debian
+          CVE-2024-0567
+        write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
@@ -138,6 +148,5 @@ jobs:
         exit-code: '1'
         ignore-unfixed: true
         vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
