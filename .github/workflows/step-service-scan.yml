@@ -71,7 +71,7 @@ jobs:
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
     - name: Repository Dispatch
-      uses: peter-evans/repository-dispatch@v2
+      uses: peter-evans/repository-dispatch@v3
       if: failure()
       with:
         token: ${{ secrets.github-pat-token }}
