@@ -120,6 +120,9 @@ jobs:
           # Fixed version not yet available in Debian
           CVE-2023-5981
           CVE-2024-0567
+          # Python 3.11.9 is not available yet
+          CVE-2023-6597
+          CVE-2024-0450
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
