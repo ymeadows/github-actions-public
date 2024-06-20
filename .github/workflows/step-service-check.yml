@@ -111,7 +111,7 @@ jobs:
       with:
         repo-name: ${{ inputs.repo-name }}
     - name: Build Docker Image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       if: ${{ github.actor != 'dependabot[bot]' }}
       with:
         context: .
