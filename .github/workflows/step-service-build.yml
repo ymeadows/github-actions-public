@@ -74,7 +74,7 @@ jobs:
       with:
         repo-name: ${{ inputs.repo-name }}
     - name: Generate OpenAPI file
-      uses: ymeadows/fastapi-openapi-specs-action@python3.11
+      uses: ymeadows/fastapi-openapi-specs-action@python3.12
       with:
         moduleDir: app
         outputExtension: json
