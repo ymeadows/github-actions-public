@@ -141,6 +141,8 @@ jobs:
           CVE-2024-4030
           # IP Private Address Space does not impact us
           CVE-2024-4032
+          # Cannot be fixed. Slow.
+          CVE-2024-6345
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
