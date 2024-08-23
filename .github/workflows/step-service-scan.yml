@@ -68,6 +68,9 @@ jobs:
           CVE-2024-4032
           # Cannot be fixed. Slow.
           CVE-2024-6345
+          # We don't use the Python email module
+          CVE-2024-6923
+          CVE-2024-7592
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
