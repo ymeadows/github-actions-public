@@ -71,6 +71,8 @@ jobs:
           # We don't use the Python email module
           CVE-2024-6923
           CVE-2024-7592
+          # We don't use zipfile
+          CVE-2024-8088
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
