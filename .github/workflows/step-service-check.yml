@@ -99,7 +99,6 @@ jobs:
       if: ${{ github.actor != 'dependabot[bot]' }}
       uses: google-github-actions/setup-gcloud@v2
       with:
-        skip_install: true # May need to remove this line if gcloud is not included in GH runners in the future
         project_id: 't0-prod'
     - name: Setup Docker
       if: ${{ github.actor != 'dependabot[bot]' }}

@@ -64,7 +64,6 @@ jobs:
       uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: 't0-prod'
-        skip_install: true
     - name: Setup Docker
       run: |-
         gcloud --quiet auth configure-docker
