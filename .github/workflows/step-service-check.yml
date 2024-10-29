@@ -167,3 +167,6 @@ jobs:
         vuln-type: 'os,library'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      env:
+        TRIVY_SKIP_DB_UPDATE: true
+        TRIVY_SKIP_JAVA_DB_UPDATE: true
