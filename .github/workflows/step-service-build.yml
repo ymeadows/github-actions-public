@@ -161,6 +161,11 @@ jobs:
         vuln-type: 'os'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
         skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      env:
+        # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
+        # Registry is returning a TOOMANYREQUESTS error.
+        # Ref: https://github.com/aquasecurity/trivy-action/issues/389
+        TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
     - name: Push Docker Image
       id: docker-push
       uses: docker/build-push-action@v6
