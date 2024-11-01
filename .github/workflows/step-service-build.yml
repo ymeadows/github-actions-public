@@ -192,7 +192,7 @@ jobs:
         TAG: v${{ inputs.epoch }}.${{ github.run_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release
-      uses: softprops/action-gh-release@69320dbe05506a9a39fc8ae11030b214ec2d1f87
+      uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8
       with:
           tag_name: v${{ inputs.epoch }}.${{ github.run_number }}
       env:
