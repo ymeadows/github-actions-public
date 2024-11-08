@@ -73,6 +73,8 @@ jobs:
           CVE-2024-7592
           # We don't use zipfile
           CVE-2024-8088
+          # Venv is not used in prod
+          CVE-2024-9287
         write-mode: append
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
