@@ -80,7 +80,7 @@ jobs:
           sonar.python.version=${{ inputs.python-version }}
         write-mode: preserve
     - name: SonarCloud Scan
-      uses: ymeadows/sonarcloud-github-action@master
+      uses: SonarSource/sonarqube-scan-action@v4
       if: ${{ github.actor != 'dependabot[bot]' }}
       env:
         GITHUB_TOKEN: ${{ secrets.github-token }}  # Needed to get PR information, if any
