@@ -161,9 +161,11 @@ jobs:
           CVE-2024-12254
           CVE-2025-0938
         write-mode: append
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy vulnerability scanner (using cached definitions)
+      id: trivy-scan
       uses: aquasecurity/trivy-action@master
       if: ${{ github.actor != 'dependabot[bot]' }}
+      continue-on-error: true
       with:
         image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
         format: 'table'
@@ -175,6 +177,23 @@ jobs:
       env:
         TRIVY_SKIP_DB_UPDATE: true
         TRIVY_SKIP_JAVA_DB_UPDATE: true
+        # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
+        # Registry is returning a TOOMANYREQUESTS error.
+        # Ref: https://github.com/aquasecurity/trivy-action/issues/389
+        TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
+    - name: Run Trivy vulnerability scanner (second attempt)
+      id: trivy-scan-second-attempt
+      uses: aquasecurity/trivy-action@master
+      if: ${{ github.actor != 'dependabot[bot]' &&  steps.trivy-scan.outcome == 'failure'}}
+      with:
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
+        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      env:
         # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
         # Registry is returning a TOOMANYREQUESTS error.
         # Ref: https://github.com/aquasecurity/trivy-action/issues/389
