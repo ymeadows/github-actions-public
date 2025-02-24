@@ -31,11 +31,17 @@ runs:
   - name: Install Nix
     env:
       USER: runner
-    uses: cachix/install-nix-action@v22
+    uses: cachix/install-nix-action@v30
     with:
       nix_path: nixpkgs=channel:nixos-unstable
 
   - uses: DeterminateSystems/magic-nix-cache-action@main
+
+  - name: Install tools
+    uses: yaxitech/nix-install-pkgs-action@v3
+    with:
+      packages: "gzip,trivy"
+      inputs-from: nixpkgs
 
   - name: Export nix-shell
     shell: bash
