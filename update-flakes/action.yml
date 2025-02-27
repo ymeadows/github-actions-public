@@ -58,4 +58,3 @@ runs:
         ```
         {{ env.GIT_COMMIT_MESSAGE }}
         ```
-  -  name: Update versions
