@@ -18,17 +18,11 @@ sanitizeInputs() {
 
 determinePackages() {
   # determine packages to update
-  if [[ -z "$PACKAGES" ]]; then
-    PACKAGES=$(nix flake show --json | jq -r '[.packages[] | keys[]] | sort | unique |  join(",")')
-  fi
+  PACKAGES=$(nix flake show --json |
+    jq -r '[.packages[] | keys[]] | select(test('$PACKAGES')) | select(test('$BLACKLIST')|not) | sort | unique |  join(",")')
 }
 
 updatePackages() {
-  if [[ -z "$PACKAGES" ]]; then
-    echo "No packages to update! Exiting."
-    exit 0
-  fi
-  # update packages
   for PACKAGE in ${PACKAGES//,/ }; do
     if [[ ",$BLACKLIST," == *",$PACKAGE,"* ]]; then
         echo "Package '$PACKAGE' is blacklisted, skipping."
