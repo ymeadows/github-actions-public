@@ -39,7 +39,7 @@ updatePackages() {
   done
 }
 
-enterFlakeFolder
+# enterFlakeFolder
 sanitizeInputs
 determinePackages
 updatePackages
