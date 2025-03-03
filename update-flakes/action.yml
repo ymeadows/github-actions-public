@@ -28,13 +28,13 @@ runs:
       extra_nix_config: |
         access-tokens = github.com=${{ github.token }}
   - name: Install tools
-    if: ${{ inputs.packages != "" }}
+    if: ${{ inputs.packages != '' }}
     uses: yaxitech/nix-install-pkgs-action@v3
     with:
       packages: "nix-update,jq"
       inputs-from: nixpkgs
   - name: Run nix-update
-    if: ${{ inputs.packages != "" }}
+    if: ${{ inputs.packages != '' }}
     run: $GITHUB_ACTION_PATH/nix-update.sh
     shell: bash
     env:
