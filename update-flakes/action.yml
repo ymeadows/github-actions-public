@@ -8,11 +8,11 @@ inputs:
     description: Key for the update app; try secrets.DEP_UPDATE_KEY
     required: true
   packages:
-    description: 'A space-separated list of inputs to update. Leave empty to update all inputs.'
+    description: 'A regular expression to match inputs to update. Leave empty to skip updating inputs.'
     required: false
     default: ''
   blacklist:
-    description: 'A list of dependencies, comma separated, to skip from updating.'
+    description: 'A regular expression to skip from updating.'
     required: false
     default: ''
   version:
@@ -28,11 +28,13 @@ runs:
       extra_nix_config: |
         access-tokens = github.com=${{ github.token }}
   - name: Install tools
+    if: ${{ inputs.packages != '' }}
     uses: yaxitech/nix-install-pkgs-action@v3
     with:
       packages: "nix-update,jq"
       inputs-from: nixpkgs
   - name: Run nix-update
+    if: ${{ inputs.packages != '' }}
     run: $GITHUB_ACTION_PATH/nix-update.sh
     shell: bash
     env:
@@ -49,8 +51,8 @@ runs:
     uses: DeterminateSystems/update-flake-lock@v24 # Open PR against upstream
     with:
       token: ${{ steps.generate-token.outputs.token }}
-      pr-title: "Update flake.lock" # Title of PR to be created
-      pr-labels: |                  # Labels to be set on the PR
+      pr-title: "Auto-update flake.lock" # Title of PR to be created
+      pr-labels: |                       # Labels to be set on the PR
         dependencies
         automated
       pr-body: |
