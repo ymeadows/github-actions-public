@@ -14,7 +14,7 @@ inputs:
   blacklist:
     description: 'A regular expression to skip from updating.'
     required: false
-    default: ''
+    default: '^$'
   version:
     description: "How to handle package versions; c.f. the nix-update tool"
     required: false
