@@ -33,6 +33,8 @@ updatePackages() {
   done
 }
 
+which jq
+jq --version
 # enterFlakeFolder
 sanitizeInputs
 determinePackages
