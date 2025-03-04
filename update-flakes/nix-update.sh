@@ -19,7 +19,7 @@ sanitizeInputs() {
 determinePackages() {
   # determine packages to update
   PACKAGES=$(nix flake show --json |
-    jq -r '[.packages[] | keys[]] | select(test('$PACKAGES')) | select(test('$BLACKLIST')|not) | sort | unique |  join(",")')
+    jq -r '[.packages[] | keys[] | select(test("'$PACKAGES'")) | select(test("'$BLACKLIST'")|not) ] | sort | unique |  join(",")')
 }
 
 updatePackages() {
