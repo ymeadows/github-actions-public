@@ -7,15 +7,40 @@ inputs:
   update_app_key:
     description: Key for the update app; try secrets.DEP_UPDATE_KEY
     required: true
-
+  packages:
+    description: 'A regular expression to match inputs to update. Leave empty to skip updating inputs.'
+    required: false
+    default: ''
+  blacklist:
+    description: 'A regular expression to skip from updating.'
+    required: false
+    default: ''
+  version:
+    description: "How to handle package versions; c.f. the nix-update tool"
+    required: false
+    default: ''
 runs:
   using: composite
   steps:
   - name: Install Nix
-    uses: cachix/install-nix-action@v21
+    uses: cachix/install-nix-action@v30
     with:
       extra_nix_config: |
         access-tokens = github.com=${{ github.token }}
+  - name: Install tools
+    if: ${{ inputs.packages != '' }}
+    uses: yaxitech/nix-install-pkgs-action@v3
+    with:
+      packages: "nix-update,jq"
+      inputs-from: nixpkgs
+  - name: Run nix-update
+    if: ${{ inputs.packages != '' }}
+    run: $GITHUB_ACTION_PATH/nix-update.sh
+    shell: bash
+    env:
+      PACKAGES: ${{ inputs.packages }}
+      BLACKLIST: ${{ inputs.blacklist }}
+      VERSION: ${{ inputs.version }}
   - name: Get Updater Token
     uses: tibdex/github-app-token@v1
     id: generate-token
@@ -23,12 +48,11 @@ runs:
       app_id: ${{ inputs.update_app_id}}
       private_key: ${{inputs.update_app_key}}
   - name: Update flake.lock
-    uses: nyarly/update-flake-lock@main # Open PR against upstream
+    uses: DeterminateSystems/update-flake-lock@v24 # Open PR against upstream
     with:
       token: ${{ steps.generate-token.outputs.token }}
-      commit-with-token: true
-      pr-title: "Update flake.lock" # Title of PR to be created
-      pr-labels: |                  # Labels to be set on the PR
+      pr-title: "Auto-update flake.lock" # Title of PR to be created
+      pr-labels: |                       # Labels to be set on the PR
         dependencies
         automated
       pr-body: |
