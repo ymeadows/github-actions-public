@@ -48,7 +48,7 @@ runs:
       app_id: ${{ inputs.update_app_id}}
       private_key: ${{inputs.update_app_key}}
   - name: Update flake.lock
-    uses: DeterminateSystems/update-flake-lock@v24 # Open PR against upstream
+    uses: nyarly/update-flake-lock@main
     with:
       token: ${{ steps.generate-token.outputs.token }}
       pr-title: "Auto-update flake.lock" # Title of PR to be created
