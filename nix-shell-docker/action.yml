@@ -4,6 +4,9 @@ inputs:
   tag-prefix:
     default: v
     description: Prefix used for the version
+  cachix-auth-token:
+    required: true
+    description: secrets.CACHIX_AUTH_TOKEN
 
 outputs:
   new-tag:
@@ -39,7 +42,7 @@ runs:
     uses: cachix/cachix-action@v16
     with:
       name: ymeadows-build-tools
-      authToken: ${{secrets.CACHIX_AUTH_TOKEN }}
+      authToken: ${{inputs.cachix-auth-token }}
       extraPullNames: nix-community
 
   - name: Install tools
