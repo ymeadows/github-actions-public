@@ -42,7 +42,7 @@ runs:
     uses: cachix/cachix-action@v16
     with:
       name: ymeadows-build-tools
-      authToken: ${{inputs.cachix_auth_token }}
+      authToken: ${{inputs.cachix-auth-token }}
       extraPullNames: nix-community
 
   - name: Install tools
