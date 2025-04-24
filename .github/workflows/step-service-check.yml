@@ -133,34 +133,8 @@ jobs:
         if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
         if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
     - id: write-global-trivyignore
-      name: Write Global Trivy Ignore
-      uses: DamianReeves/write-file-action@master
-      with:
-        path: .trivyignore
-        contents: |
-          # Fixed version not yet available in Debian
-          CVE-2023-5981
-          CVE-2024-0567
-          # Python 3.11.9 is not available yet
-          CVE-2023-6597
-          CVE-2024-0450
-          # We are not using Windows
-          CVE-2024-4030
-          # IP Private Address Space does not impact us
-          CVE-2024-4032
-          # Cannot be fixed. Slow.
-          CVE-2024-6345
-          # We don't use the Python email module
-          CVE-2024-6923
-          CVE-2024-7592
-          # We don't use zipfile
-          CVE-2024-8088
-          # Venv is not used in prod
-          CVE-2024-9287
-          # Minor issues in Python
-          CVE-2024-12254
-          CVE-2025-0938
-        write-mode: append
+      name: 'Write Global Trivy Ignore'
+      uses: 'ymeadows/github-actions-public/.github/actions/append-steps-cve-ignore-list@main'
     - name: Run Trivy vulnerability scanner (using cached definitions)
       id: trivy-scan
       uses: aquasecurity/trivy-action@master
