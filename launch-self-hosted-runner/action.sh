@@ -15,7 +15,7 @@ function safety_off {
 function start_vm {
   echo "Starting GCE VM ..."
 
-  RUNNER_TOKEN=$(curl -v -XPOST \
+  RUNNER_TOKEN=$(curl -v --show-error -XPOST \
       -H "authorization: Bearer ${token}" \
       https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
       jq --exit-status -r .token)
