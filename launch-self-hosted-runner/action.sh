@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-ACTION_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) >/dev/null 2>&1 && pwd )"
-cat "$BASH_SOURCE[0]"
-
 function usage {
   echo "Usage: ${0} --command=[start|stop] <arguments>"
 }
@@ -18,12 +15,12 @@ function safety_off {
 function start_vm {
   echo "Starting GCE VM ..."
 
-  RUNNER_TOKEN=$(curl -S -s -XPOST \
+  RUNNER_TOKEN=$(curl -v -XPOST \
       -H "authorization: Bearer ${token}" \
       https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
       jq --exit-status -r .token)
   echo "✅ Successfully got the GitHub Runner registration token"
-  echo "::add-mask::${token}"
+  echo "::add-mask::${RUNNER_TOKEN}"
 
   VM_ID="gce-gh-runner-${GITHUB_RUN_ID}-$(od -N4 -vAn -tu4 < /dev/urandom | sed 's/\s*//')"
   labels="${VM_ID}"
@@ -149,6 +146,7 @@ function stop_vm {
         -H "authorization: Bearer ${token}" \
         https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
         jq -r .token)
+    echo "::add-mask::${DEREG_TOKEN}"
     echo "✅ Successfully got the GitHub Runner deregistration token"
     sudo /actions-runner/svc.sh stop
     sudo /actions-runner/svc.sh uninstall
@@ -170,7 +168,11 @@ function boot_logs {
   gcloud compute instances get-serial-port-output $NAME --zone=$ZONE
 }
 
+echo "::add-mask::${token}"
 set -x
+ACTION_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) >/dev/null 2>&1 && pwd )"
+cat "${BASH_SOURCE[0]}"
+
 safety_on
 case "$command" in
   start)
