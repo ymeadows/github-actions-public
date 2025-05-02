@@ -18,6 +18,7 @@ function start_vm {
   RUNNER_TOKEN=$(curl -v --show-error -XPOST \
       -H "authorization: Bearer ${token}" \
       https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
+      tee /dev/stderr |\
       jq --exit-status -r .token)
   echo "✅ Successfully got the GitHub Runner registration token"
   echo "::add-mask::${RUNNER_TOKEN}"
