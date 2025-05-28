@@ -1,0 +1,35 @@
+name: "Update Cluster Version"
+description: >-
+  Triggers an action in another repo to update a named service's version
+  Note that the target repo needs to have a repository-dispatch action
+  to do the actual updating.
+
+  c.f. repo: ymeadows/tier0-cluster path: .github/workflows/update-service.yaml
+  for an example target action.
+author: JDL
+inputs:
+  REPO_DISPATCH_CLUSTER:
+    description: "A PAT to do the repo-dispatch - use secrets.REPO_DISPATCH_CLUSTER"
+    required: true
+    type: string
+  service:
+    description: "The service to update"
+    required: true
+    type: string
+  version:
+    description: "The new version to deploy"
+    required: true
+    type: string
+  target-repo:
+    description: "The ymeadows/ repo that needs to know about the new version"
+    type: string
+    default: "tier0-cluster"
+runs:
+  using: composite
+  steps:
+  - uses: peter-evans/repository-dispatch@v2
+    with:
+      token: ${{inputs.REPO_DISPATCH_CLUSTER}}
+      repository: ymeadows/${{inputs.target-repo}}
+      event-type: update-version
+      client-payload: '{"service":"${{inputs.service}}", "version":"${{inputs.version}}"}'
