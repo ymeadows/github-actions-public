@@ -56,7 +56,7 @@ runs:
         dependencies
         automated
       pr-body: |
-        Automated changes by the [update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock) GitHub Action.
+        Automated changes by the [update-flake-lock](https://github.com/ymeadows/github-actions-public/update-flakes) GitHub Action.
         ```
         {{ env.GIT_COMMIT_MESSAGE }}
         ```

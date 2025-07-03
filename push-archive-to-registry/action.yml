@@ -1,0 +1,56 @@
+name: Push Docker Archive
+
+inputs:
+  image-name:
+    description: The base image name to push to
+    required: false
+  version-tag:
+    description: The version to push
+    required: true
+  prefix:
+    description: Any prefix on the version
+    default: v
+  project:
+    description: GCP project name to push to
+    required: true
+  project_id_number:
+    description: GCP project id to push to
+    required: true
+  archive_source:
+    description: the archive that contains the docker image to push
+    default: ./result
+  registry:
+    description: the Docker registry to push to (e.g. gcr.io/t0-qa-282516)
+    required: true
+
+runs:
+  using: composite
+  steps:
+  - id: cut-version
+    uses: ymeadows/github-actions-public/lib/rolling-versions@v0
+    with:
+      version: ${{ inputs.version-tag }}
+      prefix: ${{ inputs.prefix }}
+
+  - name: Compute Docker Image Name
+    shell: bash
+    run: |
+      [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME="${{ inputs.image-name }}"
+      [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
+      echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+      echo "MAJ=${{steps.cut-version.outputs.major}}" >> $GITHUB_ENV
+      echo "MIN=${{steps.cut-version.outputs.major-minor}}" >> $GITHUB_ENV
+      echo "IMAGE_NAME=docker://${{inputs.registry}}/$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+
+  - uses: "ymeadows/github-actions-public/lib/setup-gcr@v0"
+    with:
+      project: ${{ inputs.project }}
+      project_id_number: ${{ inputs.project_id_number }}
+
+  - name: Push to QA
+    shell: bash
+    run: |
+      skopeo --insecure-policy copy docker-archive:${{inputs.archive_source}} ${IMAGE_NAME}:${{inputs.version-tag}}
+      skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:latest
+      skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$MIN
+      skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$MAJ
