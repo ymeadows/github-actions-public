@@ -8,6 +8,9 @@ inputs:
   project_id_number:
     description: The GCP project id to target
     required: true
+  registry:
+    description: The Artifact Registry to authenticate as
+    default: gcr.io
 runs:
   using: composite
   steps:
@@ -27,4 +30,4 @@ runs:
       uses: google-github-actions/setup-gcloud@v1
     - name: Setup Docker
       shell: bash
-      run: gcloud auth configure-docker
+      run: gcloud auth configure-docker ${{ inputs.registry }}
