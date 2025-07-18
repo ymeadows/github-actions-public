@@ -49,10 +49,14 @@ runs:
       project_id_number: ${{ inputs.project_id_number }}
       registry: ${{ env.REGISTRY_NAME }}
 
-  - name: Push to QA
+  - name: "Push to registry: ${{ env.REGISTRY_NAME }}"
     shell: bash
     run: |
       skopeo --insecure-policy copy docker-archive:${{inputs.archive_source}} ${IMAGE_NAME}:${{inputs.version-tag}}
+      echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:${{ inputs.version-tag }}" >> $GITHUB_STEP_SUMMARY
       skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:latest
+      echo ":ship: Tagged image: ${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
       skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$MIN
+      echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:$MIN" >> $GITHUB_STEP_SUMMARY
       skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$MAJ
+      echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:$MAJ" >> $GITHUB_STEP_SUMMARY
