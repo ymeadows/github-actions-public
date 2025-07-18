@@ -62,7 +62,10 @@ runs:
     - run: |
         cd ${{ inputs.path }}
         git tag ${{ steps.inc-tag.outputs.result }}
+        echo ":flags: Tagging new   version: ${{ steps.inc.tag.outputs.result }}" >> $GITHUB_STEP_SUMMARY
         git tag -f ${{ steps.cut-version.outputs.major-minor }}
+        echo ":flags: Tagging minor version: ${{ steps.cut-version.outputs.major-minor }}" >> $GITHUB_STEP_SUMMARY
         git tag -f ${{ steps.cut-version.outputs.major }}
+        echo ":flags: Tagging major version: ${{ steps.cut-version.outputs.major }}" >> $GITHUB_STEP_SUMMARY
         git push -f --tags
       shell: bash
