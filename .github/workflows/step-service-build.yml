@@ -140,10 +140,13 @@ jobs:
       name: 'Write Global Trivy Ignore'
       uses: 'ymeadows/github-actions-public/.github/actions/append-steps-cve-ignore-list@main'
 
+    - name: Save Docker image as tarball
+      run: |
+        docker save gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }} -o image.tar
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}'
+        input: 'image.tar'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
