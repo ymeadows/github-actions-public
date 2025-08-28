@@ -139,26 +139,25 @@ jobs:
       if: ${{ github.actor != 'dependabot[bot]' }}
       run: |
         docker save -o image.tar gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
-    - run: ls -lh ${{ github.workspace }}/image.tar
-    - name: Clear stale Trivy inputs
-      run: |
-        echo "INPUT_SCAN_REF=" >> $GITHUB_ENV
-        echo "INPUT_IMAGE_REF=" >> $GITHUB_ENV
-        echo "INPUT_INPUT=" >> $GITHUB_ENV
+    - name: Install Trivy
+      uses: aquasecurity/setup-trivy@v0.2.3
+      with:
+        version: v0.65.0
+        cache: true
     - name: Run Trivy vulnerability scanner (using cached definitions)
       id: trivy-scan
-      uses: aquasecurity/trivy-action@0.33.0
       if: ${{ github.actor != 'dependabot[bot]' }}
       continue-on-error: true
-      with:
-        scan-type: 'image'
-        input: '${{ github.workspace }}/image.tar'
-        format: 'table'
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
-        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      run: |
+        ls -lh "${{ github.workspace }}/image.tar"
+        trivy image \
+          --input "${{ github.workspace }}/image.tar" \
+          --format table \
+          --exit-code 1 \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --skip-dirs "${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}" \
+          ${ { steps.trivy-configuration.outputs.files-to-ignore && printf -- '--skip-files %q' "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ; } 2>/dev/null || true }
       env:
         TRIVY_SKIP_DB_UPDATE: true
         TRIVY_SKIP_JAVA_DB_UPDATE: true
@@ -168,16 +167,16 @@ jobs:
         TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
     - name: Run Trivy vulnerability scanner (second attempt)
       id: trivy-scan-second-attempt
-      uses: aquasecurity/trivy-action@0.33.0
       if: ${{ github.actor != 'dependabot[bot]' &&  steps.trivy-scan.outcome == 'failure'}}
-      with:
-        input: 'image.tar'
-        format: 'table'
-        exit-code: '1'
-        ignore-unfixed: true
-        vuln-type: 'os,library'
-        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
-        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      run: |
+        trivy image \
+          --input "${{ github.workspace }}/image.tar" \
+          --format table \
+          --exit-code 1 \
+          --ignore-unfixed \
+          --vuln-type os,library \
+          --skip-dirs "${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}" \
+          ${ { steps.trivy-configuration.outputs.files-to-ignore && printf -- '--skip-files %q' "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ; } 2>/dev/null || true }
       env:
         # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
         # Registry is returning a TOOMANYREQUESTS error.
