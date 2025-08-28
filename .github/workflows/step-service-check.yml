@@ -138,14 +138,14 @@ jobs:
     - name: Save Docker image as tarball
       if: ${{ github.actor != 'dependabot[bot]' }}
       run: |
-        docker save gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }} -o image.tar
+        docker save -o image.tar gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
     - name: Run Trivy vulnerability scanner (using cached definitions)
       id: trivy-scan
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.33.0
       if: ${{ github.actor != 'dependabot[bot]' }}
       continue-on-error: true
       with:
-        input: 'image.tar'
+        input: '/github/workspace/image.tar'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
