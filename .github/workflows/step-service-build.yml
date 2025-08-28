@@ -129,7 +129,7 @@ jobs:
     - name: Default Trivy configuration
       id: trivy-default-configuration
       run: |
-        echo "dirs-to-ignore=/opt/bitnami/python/lib/python${{ inputs.python-version }}/site-packages" >> $GITHUB_OUTPUT
+        echo "dirs-to-ignore=/opt/bitnami/python/lib/python${{ inputs.python-version }}/site-packages,/usr/lib/python${{ inputs.python-version }}/site-packages" >> $GITHUB_OUTPUT
     - name: Load Trivy configuration
       id: trivy-configuration
       run: |
