@@ -139,13 +139,20 @@ jobs:
       if: ${{ github.actor != 'dependabot[bot]' }}
       run: |
         docker save -o image.tar gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
+    - run: ls -lh ${{ github.workspace }}/image.tar
+    - name: Clear stale Trivy inputs
+      run: |
+        echo "INPUT_SCAN_REF=" >> $GITHUB_ENV
+        echo "INPUT_IMAGE_REF=" >> $GITHUB_ENV
+        echo "INPUT_INPUT=" >> $GITHUB_ENV
     - name: Run Trivy vulnerability scanner (using cached definitions)
       id: trivy-scan
       uses: aquasecurity/trivy-action@0.33.0
       if: ${{ github.actor != 'dependabot[bot]' }}
       continue-on-error: true
       with:
-        input: '/github/workspace/image.tar'
+        scan-type: 'image'
+        input: '${{ github.workspace }}/image.tar'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
