@@ -150,6 +150,10 @@ jobs:
       continue-on-error: true
       run: |
         ls -lh "${{ github.workspace }}/image.tar"
+        SKIP_FILES_ARG=""
+        if [ -n "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ]; then
+          SKIP_FILES_ARG="--skip-files ${{ steps.trivy-configuration.outputs.files-to-ignore }}"
+        fi
         trivy image \
           --input "${{ github.workspace }}/image.tar" \
           --format table \
@@ -157,7 +161,7 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --skip-dirs "${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}" \
-          ${ { steps.trivy-configuration.outputs.files-to-ignore && printf -- '--skip-files %q' "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ; } 2>/dev/null || true }
+          $SKIP_FILES_ARG
       env:
         TRIVY_SKIP_DB_UPDATE: true
         TRIVY_SKIP_JAVA_DB_UPDATE: true
@@ -169,6 +173,10 @@ jobs:
       id: trivy-scan-second-attempt
       if: ${{ github.actor != 'dependabot[bot]' &&  steps.trivy-scan.outcome == 'failure'}}
       run: |
+        SKIP_FILES_ARG=""
+        if [ -n "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ]; then
+          SKIP_FILES_ARG="--skip-files ${{ steps.trivy-configuration.outputs.files-to-ignore }}"
+        fi
         trivy image \
           --input "${{ github.workspace }}/image.tar" \
           --format table \
@@ -176,7 +184,7 @@ jobs:
           --ignore-unfixed \
           --vuln-type os,library \
           --skip-dirs "${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}" \
-          ${ { steps.trivy-configuration.outputs.files-to-ignore && printf -- '--skip-files %q' "${{ steps.trivy-configuration.outputs.files-to-ignore }}" ; } 2>/dev/null || true }
+          $SKIP_FILES_ARG
       env:
         # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
         # Registry is returning a TOOMANYREQUESTS error.
