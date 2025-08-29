@@ -28,13 +28,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         lfs: true
     - name: LFS Checkout
       run: git lfs checkout
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '${{ inputs.python-version }}'
         cache: 'pip'
@@ -57,11 +57,11 @@ jobs:
         pytest
     - name: Authenticate to Google Cloud
       id: 'auth'
-      uses: 'google-github-actions/auth@v2'
+      uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3.0.0
       with:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       with:
         project_id: 't0-prod'
     - name: Setup Docker
@@ -69,7 +69,7 @@ jobs:
         gcloud --quiet auth configure-docker
     - name: Set up Docker Buildx
       id: buildx
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
     - id: docker-name-step
       name: 'Derive Docker Name'
       uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
@@ -112,7 +112,7 @@ jobs:
         USERNAME=$(echo $FULL_EMAIL | cut -d'@' -f1)
         echo "author=$USERNAME" >> $GITHUB_OUTPUT
     - name: Build Docker Image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v6.18.0
       with:
         context: .
         push: false
@@ -126,33 +126,25 @@ jobs:
           org.opencontainers.image.source=https://github.com/${{ github.repository }}
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.authors=${{ steps.get-author.outputs.author }}
-    - name: Default Trivy configuration
-      id: trivy-default-configuration
-      run: |
-        echo "dirs-to-ignore=/opt/bitnami/python/lib/python${{ inputs.python-version }}/site-packages,/usr/lib/python${{ inputs.python-version }}/site-packages" >> $GITHUB_OUTPUT
     - name: Load Trivy configuration
       id: trivy-configuration
       run: |
         if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
         if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
-
     - id: write-global-trivyignore
       name: 'Write Global Trivy Ignore'
       uses: 'ymeadows/github-actions-public/.github/actions/append-steps-cve-ignore-list@main'
-
-    - name: Save Docker image as tarball
-      run: |
-        docker save -o image.tar gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@0.33.0
+      uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808 #v0.33.0
       with:
-        input: '/github/workspace/image.tar'
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ inputs.epoch }}.${{ github.run_number }}'
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
         vuln-type: 'os'
+        scanners: 'vuln,misconfig'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
-        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
       env:
         # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
         # Registry is returning a TOOMANYREQUESTS error.
@@ -160,10 +152,12 @@ jobs:
         TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
     - name: Push Docker Image
       id: docker-push
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v6.18.0
       with:
         context: .
         push: true
+        provenance: mode=max
+        sbom: true
         tags: |
           gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:${{ github.sha }}
           gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest
@@ -179,12 +173,12 @@ jobs:
           org.opencontainers.image.revision=${{ github.sha }}
           org.opencontainers.image.authors=${{ steps.get-author.outputs.author }}
     - name: Tag Git
-      uses: hole19/git-tag-action@master
+      uses: hole19/git-tag-action@0b717b660aa3ac0154c5c5e02d6153642cc64966 #v1
       env:
         TAG: v${{ inputs.epoch }}.${{ github.run_number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release
-      uses: softprops/action-gh-release@7b4da11513bf3f43f9999e90eabced41ab8bb048
+      uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 #v2.3.2
       with:
           tag_name: v${{ inputs.epoch }}.${{ github.run_number }}
       env:
