@@ -8,7 +8,7 @@
     "@actions/github": "^6.0.1"
   },
   "devDependencies": {
-    "jest": "^30.1.2"
+    "jest": "^30.1.3"
   },
   "scripts": {
     "test": "jest"
