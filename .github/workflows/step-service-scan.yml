@@ -19,16 +19,16 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
     - name: Authenticate to Google Cloud
       id: 'auth'
-      uses: 'google-github-actions/auth@v2'
+      uses: 'google-github-actions/auth@v3'
       with:
         credentials_json: '${{ secrets.gcp-credentials }}'
     - name: Setup Google Cloud
-      uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@v3
       with:
         project_id: 't0-prod'
     - name: Setup Docker
@@ -41,10 +41,6 @@ jobs:
         repo-name: ${{ inputs.repo-name }}
     - name: Pull latest image to scan
       run: docker pull gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest
-    - name: Default Trivy configuration
-      id: trivy-default-configuration
-      run: |
-        echo "dirs-to-ignore=/opt/bitnami/python/lib/python3.8/site-packages,/opt/bitnami/python/lib/python3.9/site-packages,/opt/bitnami/python/lib/python3.10/site-packages,/opt/bitnami/python/lib/python3.11/site-packages,/opt/bitnami/python/lib/python3.12/site-packages,/opt/bitnami/python/lib/python3.13/site-packages,/usr/lib/python3.9/site-packages,/usr/lib/python3.10/site-packages,/usr/lib/python3.11/site-packages,/usr/lib/python3.12/site-packages,/usr/lib/python3.13/site-packages" >> $GITHUB_OUTPUT
     - name: Load Trivy configuration
       id: trivy-configuration
       run: |
@@ -60,9 +56,10 @@ jobs:
         format: 'table'
         exit-code: '1'
         ignore-unfixed: true
+        scanners: 'vuln,misconfig'
         vuln-type: 'os'
         skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
-        skip-dirs: ${{ steps.trivy-default-configuration.outputs.dirs-to-ignore }},${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
       env:
         # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
         # Registry is returning a TOOMANYREQUESTS error.
