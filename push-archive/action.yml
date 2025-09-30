@@ -2,7 +2,7 @@ name: Push Docker Archive
 
 inputs:
   image-name:
-    description: The base image name to push to
+    description: The base image name to push to (defaults to $DOCKER_IMAGE_NAME)
     required: false
   version-tag:
     description: The version to push
@@ -14,6 +14,14 @@ inputs:
 runs:
   using: composite
   steps:
+  - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
+    with:
+      image-name: inputs.image-name
+      version-tag: inputs.version-tag
+      prefix: inputs.prefix
+      project: ym-cicd
+      project_id_number: "415435258119"
+      registry: us-docker.pkg.dev/ym-cicd/ops
   - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
     with:
       image-name: inputs.image-name
