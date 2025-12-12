@@ -4,7 +4,7 @@
   "description": "Derive the docker image name from the repo name.",
   "main": "index.js",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^2.0.1",
     "@actions/github": "^6.0.1"
   },
   "devDependencies": {
