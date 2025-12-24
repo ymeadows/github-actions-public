@@ -40,6 +40,7 @@ runs:
       echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
       echo "MAJ=${{steps.cut-version.outputs.major}}" >> $GITHUB_ENV
       echo "MIN=${{steps.cut-version.outputs.major-minor}}" >> $GITHUB_ENV
+      echo "REV=$(git rev-parse HEAD)" >> $GITHUB_ENV
       echo "IMAGE_NAME=docker://${{inputs.registry}}/$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
       echo "REGISTRY_NAME=$(echo ${{inputs.registry}} | sed 's#/.*##')" >> $GITHUB_ENV
 
@@ -60,3 +61,7 @@ runs:
       echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:$MIN" >> $GITHUB_STEP_SUMMARY
       skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$MAJ
       echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:$MAJ" >> $GITHUB_STEP_SUMMARY
+      skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:$REV
+      echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:$REV" >> $GITHUB_STEP_SUMMARY
+      skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:${{github.sha}}
+      echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:${{github.sha}}" >> $GITHUB_STEP_SUMMARY

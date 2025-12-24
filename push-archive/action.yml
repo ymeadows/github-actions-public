@@ -30,3 +30,11 @@ runs:
       project: t0-prod
       project_id_number: "47742085387"
       registry: gcr.io/t0-prod
+  - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
+    with:
+      image-name: inputs.image-name
+      version-tag: inputs.version-tag
+      prefix: inputs.prefix
+      project: ym-cicd
+      project_id_number: "415435258119"
+      registry: us-docker.pkg.dev/ym-cicd/ops
