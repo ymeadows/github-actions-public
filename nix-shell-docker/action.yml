@@ -7,6 +7,11 @@ inputs:
   cachix-auth-token:
     required: true
     description: secrets.CACHIX_AUTH_TOKEN
+  trivyignores:
+    description: Used to control Trivy scans
+    required: false
+    default: ""
+
 
 outputs:
   new-tag:
@@ -55,7 +60,7 @@ runs:
     shell: bash
     run: nix develop -c env | grep -v '\$out' | grep '=' | tee -a $GITHUB_ENV
 
-  - name: Build and Scan
+  - name: Build
     shell: bash
     run: |
       set -x
@@ -63,4 +68,14 @@ runs:
       if type ymBuild; then ymBuild; exit 0; fi
       nix build
       gzip --decompress --stdout $(readlink result) > image.tar
-      trivy image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH --input image.tar --security-checks vuln
+
+  - name: Run Trivy vulnerability scanner
+    uses: aquasecurity/trivy-action@0.11.0
+    with:
+      input: image.tar
+      format: 'table'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      severity: 'CRITICAL,HIGH'
+      trivyignores: ${{inputs.trivyignores}}
