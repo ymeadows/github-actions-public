@@ -63,7 +63,7 @@ runs:
     with:
       image-name: ${{env.DOCKER_IMAGE_NAME}}
       version-tag: ${{inputs.version}}
-      image-source: docker:localbuild
+      image-source: docker-daemon:localbuild:latest
 
   - name: Create Release
     if: ${{ !inputs.suppress-release }}
