@@ -25,7 +25,7 @@ runs:
       project: t0-qa-282516
       project_id_number: "945001042473"
       registry: gcr.io/t0-qa-282516
-      image_source: ${{inputs.image_source}}
+      image-source: ${{inputs.image_source}}
   - uses: ymeadows/github-actions-public/push-archive-to-registry@test-251224
     with:
       image-name: inputs.image-name
@@ -43,4 +43,4 @@ runs:
       project: ym-cicd
       project_id_number: "415435258119"
       registry: us-docker.pkg.dev/ym-cicd/ops
-      image_source: ${{inputs.image_source}}
+      image-source: ${{inputs.image_source}}
