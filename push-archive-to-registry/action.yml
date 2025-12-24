@@ -16,6 +16,9 @@ inputs:
   project_id_number:
     description: GCP project id to push to
     required: true
+  image-source:
+    description: full source for skopeo copy
+    default: ""
   archive_source:
     description: the archive that contains the docker image to push
     default: ./result
@@ -53,7 +56,9 @@ runs:
   - name: "Push to registry: ${{ env.REGISTRY_NAME }}"
     shell: bash
     run: |
-      skopeo --insecure-policy copy docker-archive:${{inputs.archive_source}} ${IMAGE_NAME}:${{inputs.version-tag}}
+      source=${{inputs.image-source}}
+      [[ -z $source ]] && source=docker-archive:${{inputs.archive_source}}
+      skopeo --insecure-policy copy $source ${IMAGE_NAME}:${{inputs.version-tag}}
       echo ":ship: Pushed image: ${{ env.IMAGE_NAME }}:${{ inputs.version-tag }}" >> $GITHUB_STEP_SUMMARY
       skopeo --insecure-policy copy ${IMAGE_NAME}:${{inputs.version-tag}} ${IMAGE_NAME}:latest
       echo ":ship: Tagged image: ${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY

@@ -59,10 +59,11 @@ runs:
       severity: 'CRITICAL,HIGH'
 
   - name: Push Docker Archive
-    uses: ymeadows/github-actions-public/push-archive@v0
+    uses: ymeadows/github-actions-public/push-archive@test-251224
     with:
       image-name: ${{env.DOCKER_IMAGE_NAME}}
       version-tag: ${{inputs.version}}
+      image-source: docker:localbuild
 
   - name: Create Release
     if: ${{ !inputs.suppress-release }}

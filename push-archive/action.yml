@@ -10,11 +10,14 @@ inputs:
   prefix:
     description: Any prefix on the version
     default: v
+  image-source:
+    description: full source for skopeo copy
+    default: ""
 
 runs:
   using: composite
   steps:
-  - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
+  - uses: ymeadows/github-actions-public/push-archive-to-registry@test-251224
     with:
       image-name: inputs.image-name
       version-tag: inputs.version-tag
@@ -22,7 +25,8 @@ runs:
       project: t0-qa-282516
       project_id_number: "945001042473"
       registry: gcr.io/t0-qa-282516
-  - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
+      image_source: ${{inputs.image_source}}
+  - uses: ymeadows/github-actions-public/push-archive-to-registry@test-251224
     with:
       image-name: inputs.image-name
       version-tag: inputs.version-tag
@@ -30,7 +34,8 @@ runs:
       project: t0-prod
       project_id_number: "47742085387"
       registry: gcr.io/t0-prod
-  - uses: ymeadows/github-actions-public/push-archive-to-registry@v0
+      image-source: ${{inputs.image-source}}
+  - uses: ymeadows/github-actions-public/push-archive-to-registry@test-251224
     with:
       image-name: inputs.image-name
       version-tag: inputs.version-tag
@@ -38,3 +43,4 @@ runs:
       project: ym-cicd
       project_id_number: "415435258119"
       registry: us-docker.pkg.dev/ym-cicd/ops
+      image_source: ${{inputs.image_source}}
