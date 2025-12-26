@@ -1,0 +1,173 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Validate PR
+on:
+  workflow_call:
+    inputs:
+      epoch:
+        required: false
+        default: 1
+        description: 'The major version number of the step-service.'
+        type: number
+      repo-name:
+        required: false
+        description: 'The name of the repository.'
+        type: string
+      python-version:
+        required: false
+        description: 'The version of python used in the build.'
+        default: '3.10'
+        type: string
+    secrets:
+      gcp-credentials:
+        required: false
+        description: 'The path to the GCP credentials file.'
+      github-token:
+        required: false
+        description: 'The GitHub token.'
+      sonar-token:
+        required: false
+        description: 'The SonarCloud token.'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+        lfs: true
+    - name: LFS Checkout
+      run: git lfs checkout
+    - name: Set up Python
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      with:
+        python-version: '${{ inputs.python-version }}'
+    - name: Set up uv
+      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      with:
+        enable-cache: true
+    - name: Run setup.sh if it exists
+      run: |
+        if [ -f setup.sh ]; then bash setup.sh; fi
+    - name: Install dependencies (uv)
+      run: |
+        uv sync --locked --dev
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        uv run flake8 app --exclude __pycache__ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        uv run flake8 app --exclude __pycache__ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        uv run pytest
+    - id: setup-sonarcloud
+      name: 'Setup SonarCloud Project'
+      uses: 'ymeadows/github-actions-public/.github/actions/setup-sonarcloud@main'
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      with:
+        repo-name: ${{ inputs.repo-name }}
+        organization: 'ymeadows'
+        sonar-token: ${{ secrets.sonar-token }}
+    - id: write-sonar-properties
+      uses: DamianReeves/write-file-action@6929a9a6d1807689191dcc8bbe62b54d70a32b42 # v1.3
+      with:
+        path: sonar-project.properties
+        contents: |
+          sonar.projectKey=${{ steps.setup-sonarcloud.outputs.key }}
+          sonar.organization=ymeadows
+          sonar.sourceEncoding=UTF-8
+          sonar.python.version=${{ inputs.python-version }}
+        write-mode: preserve
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarqube-scan-action@1a6d90ebcb0e6a6b1d87e37ba693fe453195ae25 # v5.3.1
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.github-token }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.sonar-token }}
+        args: >
+         -Dsonar.organization=ymeadows
+         -Dsonar.projectKey=${{ steps.setup-sonarcloud.outputs.key }}
+         -Dsonar.python.version=${{ inputs.python-version }}
+    - name: Authenticate to Google Cloud
+      id: 'auth'
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093' # v3.0.0
+      with:
+        credentials_json: '${{ secrets.gcp-credentials }}'
+    - name: Setup Google Cloud
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      with:
+        project_id: 't0-prod'
+    - name: Setup Docker
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      run: |-
+        gcloud --quiet auth configure-docker
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      if: ${{ github.actor != 'dependabot[bot]' }}
+    - id: docker-name-step
+      name: 'Derive Docker Name'
+      uses: 'ymeadows/github-actions-public/.github/actions/derive-docker-name@main'
+      with:
+        repo-name: ${{ inputs.repo-name }}
+    - name: Build Docker Image
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v6.18.0
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      with:
+        context: .
+        push: false
+        pull: true
+        load: true
+        tags: gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Load Trivy configuration
+      id: trivy-configuration
+      run: |
+        if [ -f scan-files-to-ignore.txt ]; then echo "files-to-ignore=$(cat scan-files-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+        if [ -f scan-dirs-to-ignore.txt ]; then echo "dirs-to-ignore=$(cat scan-dirs-to-ignore.txt)" >> $GITHUB_OUTPUT; fi
+    - id: write-global-trivyignore
+      name: 'Write Global Trivy Ignore'
+      uses: 'ymeadows/github-actions-public/.github/actions/append-steps-cve-ignore-list@main'
+    - name: Run Trivy vulnerability scanner (using cached definitions)
+      id: trivy-scan
+      uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808 # 0.33.0
+      if: ${{ github.actor != 'dependabot[bot]' }}
+      continue-on-error: true
+      with:
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        scanners: 'vuln,misconfig'
+        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
+        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      env:
+        TRIVY_SKIP_DB_UPDATE: true
+        TRIVY_SKIP_JAVA_DB_UPDATE: true
+        # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
+        # Registry is returning a TOOMANYREQUESTS error.
+        # Ref: https://github.com/aquasecurity/trivy-action/issues/389
+        TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
+    - name: Run Trivy vulnerability scanner (second attempt)
+      id: trivy-scan-second-attempt
+      uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808 #v0.33.0
+      if: ${{ github.actor != 'dependabot[bot]' &&  steps.trivy-scan.outcome == 'failure'}}
+      with:
+        image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:pr-test-${{ inputs.epoch }}.${{ github.run_number }}'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        scanners: 'vuln,misconfig'
+        skip-files: ${{ steps.trivy-configuration.outputs.files-to-ignore }}
+        skip-dirs: ${{ steps.trivy-configuration.outputs.dirs-to-ignore }}
+      env:
+        # Use AWS' ECR mirror for the trivy-db image, as GitHub's Container
+        # Registry is returning a TOOMANYREQUESTS error.
+        # Ref: https://github.com/aquasecurity/trivy-action/issues/389
+        TRIVY_DB_REPOSITORY: 'public.ecr.aws/aquasecurity/trivy-db:2'
