@@ -91,6 +91,7 @@ jobs:
       with:
         moduleDir: app
         outputExtension: json
+        installDependencies: "uv sync"
     - name: Generate OpenAPI file with Python 3.12
       id: generate-openapi3_12
       uses: ymeadows/fastapi-openapi-specs-action@python3.12
@@ -99,6 +100,7 @@ jobs:
       with:
         moduleDir: app
         outputExtension: json
+        installDependencies: "uv sync"
     - name: Generate OpenAPI file with Python 3.11
       id: generate-openapi3_11
       uses: ymeadows/fastapi-openapi-specs-action@python3.11
@@ -107,6 +109,7 @@ jobs:
       with:
         moduleDir: app
         outputExtension: json
+        installDependencies: "uv sync"
     - name: Fallback openapi.json
       if: ${{ steps.generate-openapi3_11.outcome != 'success' && steps.generate-openapi3_12.outcome != 'success' && steps.generate-openapi3_13.outcome != 'success' }}
       run: echo "{}" > openapi.json
