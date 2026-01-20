@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Update UV Dependencies
+on:
+  workflow_call:
+    inputs:
+      repo-name:
+        required: false
+        description: 'The name of the repository.'
+        type: string
+      python-version:
+        required: false
+        description: 'The version of python to use.'
+        default: '3.10'
+        type: string
+      runs-on:
+        required: false
+        description: 'The runner type to use for the job.'
+        default: 'ubuntu-latest'
+        type: string
+    secrets:
+      github-pat-token:
+        required: true
+        description: 'The GitHub Personal Access token with repo and workflow permissions.'
+
+jobs:
+  update-dependencies:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.github-pat-token }}
+
+    - name: Set up Python
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      with:
+        python-version: '${{ inputs.python-version }}'
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      with:
+        enable-cache: true
+
+    - name: Store original lock file
+      run: |
+        if [ -f uv.lock ]; then
+          cp uv.lock uv.lock.original
+        else
+          echo "No uv.lock file found"
+          exit 1
+        fi
+
+    - name: Update dependencies
+      id: update
+      run: |
+        echo "Running uv lock --upgrade..."
+        uv lock --upgrade
+        echo "Running uv sync..."
+        uv sync
+        echo "Dependency update completed"
+
+    - name: Parse version changes
+      id: parse_changes
+      run: |
+        python3 << 'EOF'
+        import re
+        import sys
+
+        def parse_lock_file(file_path):
+            """Parse uv.lock file and extract package versions."""
+            packages = {}
+            current_package = None
+
+            try:
+                with open(file_path, 'r') as f:
+                    for line in f:
+                        # Match package name lines like: [[package]]
+                        if line.strip() == '[[package]]':
+                            current_package = {}
+                        # Match name field
+                        elif current_package is not None and line.startswith('name = '):
+                            name = line.split('=', 1)[1].strip().strip('"').strip("'")
+                            current_package['name'] = name
+                        # Match version field
+                        elif current_package is not None and line.startswith('version = '):
+                            version = line.split('=', 1)[1].strip().strip('"').strip("'")
+                            current_package['version'] = version
+                            if 'name' in current_package:
+                                packages[current_package['name']] = current_package['version']
+                            current_package = None
+            except FileNotFoundError:
+                print(f"Error: {file_path} not found", file=sys.stderr)
+                return {}
+
+            return packages
+
+        # Parse both lock files
+        old_packages = parse_lock_file('uv.lock.original')
+        new_packages = parse_lock_file('uv.lock')
+
+        # Find changes
+        changes = []
+
+        # Updated packages
+        for name, new_version in sorted(new_packages.items()):
+            if name in old_packages:
+                old_version = old_packages[name]
+                if old_version != new_version:
+                    changes.append(f"- **{name}**: {old_version} → {new_version}")
+
+        # New packages
+        for name, version in sorted(new_packages.items()):
+            if name not in old_packages:
+                changes.append(f"- **{name}**: (new) → {version}")
+
+        # Removed packages
+        for name, version in sorted(old_packages.items()):
+            if name not in new_packages:
+                changes.append(f"- **{name}**: {version} → (removed)")
+
+        if changes:
+            # Write to a temporary file for the PR body
+            with open('/tmp/version_changes.md', 'w') as f:
+                f.write('\n'.join(changes))
+            print(f"Found {len(changes)} package changes")
+        else:
+            print("No version changes detected")
+            with open('/tmp/version_changes.md', 'w') as f:
+                f.write("No specific version changes detected.")
+        EOF
+
+    - name: Generate PR body
+      id: pr_body
+      run: |
+        VERSION_CHANGES=$(cat /tmp/version_changes.md)
+
+        # Create PR body file for create-pull-request action
+        cat > /tmp/pr_body.md <<EOF_PR
+        ## Summary
+        Automated update of uv dependencies to their latest compatible versions.
+
+        ## Changes
+        $VERSION_CHANGES
+
+        ## Details
+        - Generated by: GitHub Actions workflow
+        - Run ID: ${{ github.run_id }}
+        - Workflow: \`step-service-update-deps.yml\`
+
+        This PR will auto-merge once all required checks pass.
+        EOF_PR
+
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+      with:
+        token: ${{ secrets.github-pat-token }}
+        commit-message: |
+          Update uv dependencies
+
+          Automated dependency update via GitHub Actions.
+          Run ID: ${{ github.run_id }}
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        branch: YM-293-deps-update-${{ github.run_id }}
+        delete-branch: true
+        title: Update uv dependencies
+        body-path: /tmp/pr_body.md
+        labels: dependencies
+        assignees: ${{ github.actor }}
+
+    - name: Enable auto-merge
+      if: steps.cpr.outputs.pull-request-number != ''
+      env:
+        GH_TOKEN: ${{ secrets.github-pat-token }}
+      run: |
+        # Enable auto-merge with squash strategy
+        gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --auto --squash
+
+        echo "Auto-merge enabled on PR #${{ steps.cpr.outputs.pull-request-number }}"
+
+    - name: Summary
+      if: always()
+      run: |
+        if [ "${{ steps.cpr.outputs.pull-request-number }}" != "" ]; then
+          echo "✅ Dependencies updated and PR created with auto-merge enabled"
+          echo "PR: ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "Branch: YM-293-deps-update-${{ github.run_id }}"
+        else
+          echo "ℹ️ No dependency updates available - all packages are up to date"
+        fi
