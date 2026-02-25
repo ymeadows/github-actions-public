@@ -136,6 +136,9 @@ jobs:
                 f.write("No specific version changes detected.")
         EOF
 
+    - name: Clean up temporary files
+      run: rm -f uv.lock.original
+
     - name: Generate PR body
       id: pr_body
       run: |
