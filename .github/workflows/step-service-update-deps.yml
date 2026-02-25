@@ -169,6 +169,7 @@ jobs:
         body-path: /tmp/pr_body.md
         labels: dependencies
         assignees: ${{ github.actor }}
+        sign-commits: true
 
     - name: Enable auto-merge
       if: steps.cpr.outputs.pull-request-number != ''
