@@ -10,7 +10,7 @@ on:
       python-version:
         required: false
         description: 'The version of python to use.'
-        default: '3.10'
+        default: '3.13'
         type: string
       base-branch:
         required: false
@@ -70,70 +70,30 @@ jobs:
       id: parse_changes
       run: |
         python3 << 'EOF'
-        import re
-        import sys
+        import tomllib
 
         def parse_lock_file(file_path):
-            """Parse uv.lock file and extract package versions."""
-            packages = {}
-            current_package = None
+            with open(file_path, 'rb') as f:
+                data = tomllib.load(f)
+            return {p['name']: p['version'] for p in data.get('package', [])}
 
-            try:
-                with open(file_path, 'r') as f:
-                    for line in f:
-                        # Match package name lines like: [[package]]
-                        if line.strip() == '[[package]]':
-                            current_package = {}
-                        # Match name field
-                        elif current_package is not None and line.startswith('name = '):
-                            name = line.split('=', 1)[1].strip().strip('"').strip("'")
-                            current_package['name'] = name
-                        # Match version field
-                        elif current_package is not None and line.startswith('version = '):
-                            version = line.split('=', 1)[1].strip().strip('"').strip("'")
-                            current_package['version'] = version
-                            if 'name' in current_package:
-                                packages[current_package['name']] = current_package['version']
-                            current_package = None
-            except FileNotFoundError:
-                print(f"Error: {file_path} not found", file=sys.stderr)
-                return {}
-
-            return packages
-
-        # Parse both lock files
         old_packages = parse_lock_file('uv.lock.original')
         new_packages = parse_lock_file('uv.lock')
 
-        # Find changes
         changes = []
-
-        # Updated packages
-        for name, new_version in sorted(new_packages.items()):
-            if name in old_packages:
-                old_version = old_packages[name]
-                if old_version != new_version:
-                    changes.append(f"- **{name}**: {old_version} → {new_version}")
-
-        # New packages
-        for name, version in sorted(new_packages.items()):
+        for name, new_ver in sorted(new_packages.items()):
+            if name in old_packages and old_packages[name] != new_ver:
+                changes.append(f"- **{name}**: {old_packages[name]} → {new_ver}")
+        for name, ver in sorted(new_packages.items()):
             if name not in old_packages:
-                changes.append(f"- **{name}**: (new) → {version}")
-
-        # Removed packages
-        for name, version in sorted(old_packages.items()):
+                changes.append(f"- **{name}**: (new) → {ver}")
+        for name, ver in sorted(old_packages.items()):
             if name not in new_packages:
-                changes.append(f"- **{name}**: {version} → (removed)")
+                changes.append(f"- **{name}**: {ver} → (removed)")
 
-        if changes:
-            # Write to a temporary file for the PR body
-            with open('/tmp/version_changes.md', 'w') as f:
-                f.write('\n'.join(changes))
-            print(f"Found {len(changes)} package changes")
-        else:
-            print("No version changes detected")
-            with open('/tmp/version_changes.md', 'w') as f:
-                f.write("No specific version changes detected.")
+        with open('/tmp/version_changes.md', 'w') as f:
+            f.write('\n'.join(changes) if changes else "No specific version changes detected.")
+        print(f"Found {len(changes)} package changes" if changes else "No version changes detected")
         EOF
 
     - name: Clean up temporary files
