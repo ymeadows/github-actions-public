@@ -12,6 +12,11 @@ on:
         description: 'The version of python to use.'
         default: '3.10'
         type: string
+      base-branch:
+        required: false
+        description: 'The base branch for the pull request.'
+        default: 'main'
+        type: string
       runs-on:
         required: false
         description: 'The runner type to use for the job.'
@@ -29,6 +34,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
+        ref: ${{ inputs.base-branch }}
         fetch-depth: 0
         token: ${{ secrets.github-pat-token }}
 
@@ -157,15 +163,16 @@ jobs:
       with:
         token: ${{ secrets.github-pat-token }}
         commit-message: |
-          Update uv dependencies
+          YM-293: Update uv dependencies
 
           Automated dependency update via GitHub Actions.
           Run ID: ${{ github.run_id }}
         committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         branch: YM-293-deps-update-${{ github.run_id }}
+        base: ${{ inputs.base-branch }}
         delete-branch: true
-        title: Update uv dependencies
+        title: "YM-293: Update uv dependencies"
         body-path: /tmp/pr_body.md
         labels: dependencies
         assignees: ${{ github.actor }}
