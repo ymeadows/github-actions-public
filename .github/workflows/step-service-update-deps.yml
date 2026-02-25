@@ -30,6 +30,8 @@ on:
 jobs:
   update-dependencies:
     runs-on: ${{ inputs.runs-on }}
+    permissions:
+      contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -125,6 +127,7 @@ jobs:
       uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
       with:
         token: ${{ secrets.github-pat-token }}
+        git-token: ${{ github.token }}
         commit-message: |
           YM-293: Update uv dependencies
 
