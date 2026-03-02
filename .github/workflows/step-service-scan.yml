@@ -55,7 +55,7 @@ jobs:
       name: 'Write Global Trivy Ignore'
       uses: 'ymeadows/github-actions-public/.github/actions/append-steps-cve-ignore-list@main'
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 # v0.34.2
       with:
         image-ref: 'gcr.io/t0-prod/${{ steps.docker-name-step.outputs.docker-name }}:latest'
         format: 'table'
