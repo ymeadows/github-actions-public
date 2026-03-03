@@ -42,6 +42,7 @@ jobs:
       with:
         enable-cache: true
         ignore-nothing-to-cache: true
+        prune-cache: false
     - name: Run setup.sh if it exists
       run: |
         if [ -f setup.sh ]; then bash setup.sh; fi
