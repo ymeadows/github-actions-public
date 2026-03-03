@@ -54,6 +54,7 @@ jobs:
       with:
         enable-cache: true
         ignore-nothing-to-cache: true
+        prune-cache: false
 
     - name: Store original lock file
       run: |
