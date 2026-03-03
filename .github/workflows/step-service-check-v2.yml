@@ -55,6 +55,141 @@ jobs:
     - name: Install dependencies (uv)
       run: |
         uv sync --locked --dev
+    - name: Check for dev-only dependency imports in production code
+      run: |
+        # Create a prod-only venv mirroring Docker's UV_NO_DEV=1 behavior
+        uv venv /tmp/prod-deps-check --python ${{ inputs.python-version }}
+        UV_PROJECT_ENVIRONMENT=/tmp/prod-deps-check uv sync --locked --no-dev --no-install-project --inexact
+
+        # Run the import checker using the prod-only venv's Python so that
+        # importlib.util.find_spec resolves against exactly the prod dependency set
+        /tmp/prod-deps-check/bin/python << 'PYEOF'
+        import ast
+        import importlib.util
+        import os
+        import sys
+        from collections import defaultdict
+
+        if sys.version_info < (3, 10):
+            print("Python < 3.10: skipping dev-dependency import check (sys.stdlib_module_names unavailable)")
+            sys.exit(0)
+
+
+        class ImportCollector(ast.NodeVisitor):
+            """Collects import names from an AST, skipping TYPE_CHECKING and try/except ImportError blocks."""
+
+            def __init__(self):
+                self.imports = set()
+
+            def visit_If(self, node):
+                test = node.test
+                if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+                    return
+                if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
+                    return
+                self.generic_visit(node)
+
+            def visit_Try(self, node):
+                handler_types = set()
+                for handler in node.handlers:
+                    if handler.type is None:
+                        handler_types.add("bare")
+                    elif isinstance(handler.type, ast.Name):
+                        handler_types.add(handler.type.id)
+                    elif isinstance(handler.type, ast.Tuple):
+                        for elt in handler.type.elts:
+                            if isinstance(elt, ast.Name):
+                                handler_types.add(elt.id)
+                if handler_types & {"ImportError", "ModuleNotFoundError"}:
+                    return
+                self.generic_visit(node)
+
+            def visit_Import(self, node):
+                for alias in node.names:
+                    self.imports.add(alias.name)
+
+            def visit_ImportFrom(self, node):
+                if node.module and node.level == 0:
+                    self.imports.add(node.module)
+
+
+        def is_test_file(filename):
+            return filename.startswith("test_") or filename.endswith("_test.py") or filename == "conftest.py"
+
+
+        def get_local_packages():
+            names = set()
+            for entry in os.listdir("."):
+                if os.path.isdir(entry) and os.path.isfile(os.path.join(entry, "__init__.py")):
+                    names.add(entry)
+            return names
+
+
+        # Scan production Python files in app/
+        all_imports = set()
+        import_sources = defaultdict(set)  # module -> set of files that import it
+
+        for root, dirs, files in os.walk("app"):
+            dirs[:] = [d for d in dirs if d != "__pycache__"]
+            for f in files:
+                if not f.endswith(".py") or is_test_file(f):
+                    continue
+                filepath = os.path.join(root, f)
+                try:
+                    with open(filepath) as fh:
+                        tree = ast.parse(fh.read(), filename=filepath)
+                except SyntaxError:
+                    continue
+                collector = ImportCollector()
+                collector.visit(tree)
+                for imp in collector.imports:
+                    all_imports.add(imp)
+                    import_sources[imp].add(filepath)
+
+        if not all_imports:
+            print("No imports found in production code. Skipping check.")
+            sys.exit(0)
+
+        # Filter to third-party imports only
+        stdlib = sys.stdlib_module_names
+        local = get_local_packages()
+        third_party = {imp for imp in all_imports if imp.split(".")[0] not in stdlib and imp.split(".")[0] not in local}
+
+        # Check each import against the prod-only environment
+        missing = []
+        for imp in sorted(third_party):
+            top_level = imp.split(".")[0]
+            spec = importlib.util.find_spec(top_level)
+            if spec is None:
+                missing.append(imp)
+                continue
+            if "." in imp:
+                try:
+                    if importlib.util.find_spec(imp) is None:
+                        missing.append(imp)
+                except (ModuleNotFoundError, ValueError):
+                    missing.append(imp)
+
+        if missing:
+            print("::error::Production code imports packages not in production dependencies!")
+            print()
+            print("The following imports in app/ (non-test files) are NOT available when")
+            print("only production dependencies are installed. They may work in CI because")
+            print("they are transitive dependencies of dev-only packages, but they will")
+            print("FAIL in the production Docker image (which uses UV_NO_DEV=1).")
+            print()
+            for m in missing:
+                files = ", ".join(sorted(import_sources[m]))
+                print(f"  - '{m}' imported in: {files}")
+            print()
+            print("To fix, either:")
+            print("  1. Add the package to [project.dependencies] in pyproject.toml")
+            print("  2. Remove the import from production code")
+            print("  3. Guard the import with: try/except ImportError")
+            sys.exit(1)
+        else:
+            print(f"All {len(third_party)} third-party imports in production code are satisfied by production dependencies.")
+        PYEOF
     - name: Check for syntax errors with ruff
       uses: astral-sh/ruff-action@v3
       with:
