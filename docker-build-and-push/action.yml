@@ -58,7 +58,7 @@ runs:
         severity: "CRITICAL,HIGH"
 
     - name: Push Docker Archive
-      uses: ymeadows/github-actions-public/push-archive@fix-docker-push-archive-DOP-1928
+      uses: ymeadows/github-actions-public/push-archive@v0
       with:
         image-name: ${{env.DOCKER_IMAGE_NAME}}
         version-tag: ${{inputs.version}}
