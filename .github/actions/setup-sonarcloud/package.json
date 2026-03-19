@@ -2,10 +2,19 @@
   "name": "setup-sonarcloud",
   "version": "1.0.1",
   "description": "Setup SonarCloud for GitHub Actions",
-  "main": "index.js",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "rollup": "^4.0.0"
   },
   "keywords": [],
   "author": "Y Meadows",
