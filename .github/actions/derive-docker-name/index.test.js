@@ -1,13 +1,15 @@
-const process = require('process');
-const cp = require('child_process');
-const path = require('path');
+import { execSync } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test('test runs', () => {
-    process.env['INPUT_REPO-NAME'] = "ymeadowsstep-test-name";
-    const ip = path.join(__dirname, 'index.js');
+    const ip = path.join(__dirname, 'dist', 'index.js');
     const env = {
+        ...process.env,
         "INPUT_REPO-NAME": "ymeadows/step-test-name"
     }
-    const result = cp.execSync(`node ${ip}`, {env: env}).toString();
-    expect(result).toContain("::set-output name=docker-name::test-name");
+    const result = execSync(`node ${ip}`, {env: env}).toString();
+    expect(result).toContain("test-name");
 });

@@ -15,4 +15,4 @@ outputs:
     description: 'The key of the SonarCloud project.'
 runs:
   using: 'node20'
-  main: 'index.js'
+  main: 'dist/index.js'
