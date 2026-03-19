@@ -24,49 +24,48 @@ inputs:
     required: false
     default: false
 
-
 runs:
   using: composite
 
   steps:
-  - name: Compute Docker Values
-    shell: bash
-    run: |
-      DOCKER_IMAGE_NAME=${{ inputs.image-name }}
-      [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
-      echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
+    - name: Compute Docker Values
+      shell: bash
+      run: |
+        DOCKER_IMAGE_NAME=${{ inputs.image-name }}
+        [ -z "$DOCKER_IMAGE_NAME" ] && DOCKER_IMAGE_NAME=$(echo "${{ github.repository }}" | sed 's#${{ github.repository_owner }}/##')
+        echo "DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME" >> $GITHUB_ENV
 
-  - name: Build Release Image
-    shell: bash
-    run: > # folded string
-      docker build --tag localbuild ${{ (!inputs.suppress-pull && '--pull') || '' }}
-      --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}"
-      --label "org.opencontainers.image.version=${{ inputs.version }}"
-      --label "org.opencontainers.image.revision=${{ env.REV }}"
-      .
-      | tee BUILDLOG.txt
+    - name: Build Release Image
+      shell: bash
+      run: > # folded string
+        docker build --tag localbuild ${{ (!inputs.suppress-pull && '--pull') || '' }}
+        --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}"
+        --label "org.opencontainers.image.version=${{ inputs.version }}"
+        --label "org.opencontainers.image.revision=${{ env.REV }}"
+        .
+        | tee BUILDLOG.txt
 
-      docker save localbuild -o scanme.tar # trouble loading local images
+        docker save localbuild -o result # trouble loading local images
 
-  - name: Run Trivy vulnerability scanner
-    uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 # v0.34.2
-    with:
-      input: scanme.tar
-      format: 'table'
-      exit-code: '1'
-      ignore-unfixed: true
-      vuln-type: 'os,library'
-      severity: 'CRITICAL,HIGH'
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478 # v0.34.2
+      with:
+        input: result
+        format: "table"
+        exit-code: "1"
+        ignore-unfixed: true
+        vuln-type: "os,library"
+        severity: "CRITICAL,HIGH"
 
-  - name: Push Docker Archive
-    uses: ymeadows/github-actions-public/push-archive@v0
-    with:
-      image-name: ${{env.DOCKER_IMAGE_NAME}}
-      version-tag: ${{inputs.version}}
+    - name: Push Docker Archive
+      uses: ymeadows/github-actions-public/push-archive@v0
+      with:
+        image-name: ${{env.DOCKER_IMAGE_NAME}}
+        version-tag: ${{inputs.version}}
 
-  - name: Create Release
-    if: ${{ !inputs.suppress-release }}
-    uses: softprops/action-gh-release@v1
-    with:
-      body_path: BUILDLOG.txt
-      tag_name: ${{ inputs.version }}
+    - name: Create Release
+      if: ${{ !inputs.suppress-release }}
+      uses: softprops/action-gh-release@v1
+      with:
+        body_path: BUILDLOG.txt
+        tag_name: ${{ inputs.version }}
